@@ -1,0 +1,232 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>KickBet 前端页面预览</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+    body { font-family: 'Inter', sans-serif; }
+    .kb-bg { background-color: #08090a; }
+    .kb-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.1); }
+    .kb-accent { color: #6366f1; }
+    .kb-accent-bg { background-color: #6366f1; }
+    .kb-border { border-color: rgba(255,255,255,0.1); }
+    .kb-text-muted { color: rgba(255,255,255,0.5); }
+    .kb-text-secondary { color: rgba(255,255,255,0.7); }
+    .kb-success { color: #22c55e; }
+    .kb-warning { color: #f59e0b; }
+    .kb-danger { color: #ef4444; }
+    .kb-tag { background: rgba(99,102,241,0.2); color: #6366f1; }
+    .phone-frame {
+      width: 375px;
+      height: 700px;
+      border-radius: 40px;
+      border: 8px solid #333;
+      overflow: hidden;
+      position: relative;
+    }
+    .nav-item.active { color: #6366f1; }
+    .nav-item { color: rgba(255,255,255,0.5); }
+  </style>
+</head>
+<body class="bg-gray-900 p-8">
+  <div class="max-w-6xl mx-auto">
+    <h1 class="text-3xl font-bold text-white mb-2">KickBet 前端页面设计</h1>
+    <p class="text-gray-400 mb-8">Linear Minimal Dark 风格 · 移动端优先</p>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+      
+      <!-- 比赛列表页 -->
+      <div>
+        <h2 class="text-xl text-white mb-4">比赛列表页</h2>
+        <div class="phone-frame kb-bg mx-auto">
+          <div class="h-full flex flex-col">
+            <!-- 头部 -->
+            <header class="px-4 py-4 border-b kb-border sticky top-0 kb-bg/90">
+              <h1 class="text-xl font-semibold text-white">比赛列表</h1>
+            </header>
+            
+            <!-- 联赛筛选 -->
+            <section class="px-4 py-3 border-b kb-border">
+              <div class="flex gap-2 overflow-x-auto text-sm">
+                <button class="kb-accent-bg text-white px-3 py-1 rounded-lg whitespace-nowrap">全部</button>
+                <button class="kb-card text-kb-text-secondary px-3 py-1 rounded-lg whitespace-nowrap">英超</button>
+                <button class="kb-card text-kb-text-secondary px-3 py-1 rounded-lg whitespace-nowrap">德甲</button>
+                <button class="kb-card text-kb-text-secondary px-3 py-1 rounded-lg whitespace-nowrap">西甲</button>
+                <button class="kb-card text-kb-text-secondary px-3 py-1 rounded-lg whitespace-nowrap">意甲</button>
+              </div>
+            </section>
+            
+            <!-- 比赛卡片 -->
+            <section class="px-4 py-4 flex-1 overflow-auto">
+              <div class="kb-card rounded-xl p-4 mb-3 cursor-pointer hover:border-kb-accent/30">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="kb-tag text-xs px-2 py-1 rounded">英超</span>
+                  <span class="text-sm kb-text-secondary">明天 19:00</span>
+                </div>
+                <div class="text-lg font-medium text-white">Tottenham vs Leeds</div>
+                <div class="mt-2 text-sm kb-text-muted">点击查看预测分析 →</div>
+              </div>
+              
+              <div class="kb-card rounded-xl p-4 mb-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="kb-tag text-xs px-2 py-1 rounded">西甲</span>
+                  <span class="text-sm kb-text-secondary">明天 21:00</span>
+                </div>
+                <div class="text-lg font-medium text-white">Rayo Vallecano vs Girona</div>
+                <div class="mt-2 text-sm kb-text-muted">点击查看预测分析 →</div>
+              </div>
+              
+              <div class="kb-card rounded-xl p-4 mb-3">
+                <div class="flex items-center justify-between mb-2">
+                  <span class="kb-tag text-xs px-2 py-1 rounded">意甲</span>
+                  <span class="text-sm kb-text-secondary">后天 15:00</span>
+                </div>
+                <div class="text-lg font-medium text-white">Napoli vs Bologna</div>
+                <div class="mt-2 text-sm kb-text-muted">点击查看预测分析 →</div>
+              </div>
+            </section>
+            
+            <!-- 底部导航 -->
+            <nav class="kb-card border-t kb-border px-4 py-3 flex justify-around">
+              <div class="nav-item text-center">
+                <div class="text-lg">🏠</div>
+                <div class="text-xs">首页</div>
+              </div>
+              <div class="nav-item active text-center">
+                <div class="text-lg">⚽</div>
+                <div class="text-xs">比赛</div>
+              </div>
+              <div class="nav-item text-center">
+                <div class="text-lg">📊</div>
+                <div class="text-xs">组合</div>
+              </div>
+              <div class="nav-item text-center">
+                <div class="text-lg">📈</div>
+                <div class="text-xs">追踪</div>
+              </div>
+            </nav>
+          </div>
+        </div>
+      </div>
+      
+      <!-- 分析弹窗 -->
+      <div>
+        <h2 class="text-xl text-white mb-4">分析弹窗 (点击比赛后)</h2>
+        <div class="phone-frame kb-bg mx-auto">
+          <div class="h-full flex flex-col p-4">
+            <!-- 弹窗卡片 -->
+            <div class="kb-card rounded-2xl flex-1 overflow-auto">
+              <!-- 头部 -->
+              <div class="p-4 border-b kb-border flex items-center justify-between">
+                <div>
+                  <span class="kb-tag text-xs px-2 py-1 rounded mb-2 inline-block">英超</span>
+                  <h2 class="text-lg font-semibold text-white mt-1">Tottenham vs Leeds</h2>
+                </div>
+                <button class="kb-text-secondary text-xl">✕</button>
+              </div>
+              
+              <!-- API警告 -->
+              <div class="px-4 py-3 border-b kb-border border-kb-warning/30">
+                <div class="text-kb-warning text-sm">⚠️ 赔率API暂时不可用，仅显示预测</div>
+              </div>
+              
+              <!-- 概率预测 -->
+              <div class="p-4">
+                <h3 class="text-sm kb-text-secondary mb-3">胜平负概率</h3>
+                <div class="grid grid-cols-3 gap-2">
+                  <div class="kb-card p-3 text-center rounded-xl">
+                    <div class="text-xs kb-text-muted mb-1">主胜</div>
+                    <div class="text-xl font-bold kb-success">42.9%</div>
+                    <div class="text-xs kb-text-secondary">赔率 --</div>
+                  </div>
+                  <div class="kb-card p-3 text-center rounded-xl">
+                    <div class="text-xs kb-text-muted mb-1">平局</div>
+                    <div class="text-xl font-bold kb-warning">25.1%</div>
+                    <div class="text-xs kb-text-secondary">赔率 --</div>
+                  </div>
+                  <div class="kb-card p-3 text-center rounded-xl">
+                    <div class="text-xs kb-text-muted mb-1">客胜</div>
+                    <div class="text-xl font-bold kb-danger">32.0%</div>
+                    <div class="text-xs kb-text-secondary">赔率 --</div>
+                  </div>
+                </div>
+                
+                <!-- Poisson模拟 -->
+                <div class="mt-4">
+                  <h3 class="text-sm kb-text-secondary mb-2">Poisson模拟 (10000次)</h3>
+                  <div class="kb-card p-3 rounded-xl">
+                    <div class="flex justify-between text-sm text-white">
+                      <span>最可能比分</span>
+                      <span class="font-medium kb-accent">1-1</span>
+                    </div>
+                    <div class="flex justify-between text-sm kb-text-muted mt-1">
+                      <span>预期进球</span>
+                      <span>1.53 / 1.30</span>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- 价值评估 -->
+                <div class="mt-4">
+                  <h3 class="text-sm kb-text-secondary mb-2">价值评估</h3>
+                  <div class="kb-card p-3 rounded-xl text-center kb-text-muted">
+                    当前赔率无明显价值投注机会
+                  </div>
+                </div>
+                
+                <!-- 投注建议 -->
+                <div class="mt-4">
+                  <h3 class="text-sm kb-text-secondary mb-2">投注建议</h3>
+                  <div class="kb-card p-3 rounded-xl mb-2">
+                    <div class="text-xs kb-text-muted mb-1">保守方案</div>
+                    <div class="font-medium text-white">双选防守</div>
+                    <div class="text-sm kb-text-secondary">赔率 1.50 · 2%资金</div>
+                  </div>
+                  <div class="kb-card p-3 rounded-xl mb-2 border-kb-accent/30">
+                    <div class="text-xs kb-accent mb-1">平衡方案 ★ 推荐</div>
+                    <div class="font-medium text-white">主胜</div>
+                    <div class="text-sm kb-text-secondary">赔率 1.81 · 3%资金</div>
+                  </div>
+                  <div class="kb-card p-3 rounded-xl">
+                    <div class="text-xs kb-text-muted mb-1">激进方案</div>
+                    <div class="font-medium text-white">大2.5球</div>
+                    <div class="text-sm kb-text-secondary">赔率 1.90 · 5%资金</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+    </div>
+    
+    <!-- 设计说明 -->
+    <div class="mt-8 kb-card rounded-xl p-6">
+      <h2 class="text-xl text-white mb-4">设计规格</h2>
+      <div class="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
+        <div>
+          <div class="kb-text-muted mb-1">背景色</div>
+          <div class="text-white">#08090a</div>
+        </div>
+        <div>
+          <div class="kb-text-muted mb-1">主色调</div>
+          <div class="kb-accent">#6366f1</div>
+        </div>
+        <div>
+          <div class="kb-text-muted mb-1">卡片边框</div>
+          <div class="text-white">rgba(255,255,255,0.1)</div>
+        </div>
+        <div>
+          <div class="kb-text-muted mb-1">字体</div>
+          <div class="text-white">Inter</div>
+        </div>
+      </div>
+    </div>
+    
+  </div>
+</body>
+</html>

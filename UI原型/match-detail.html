@@ -1,0 +1,888 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KickBet - 比赛详情</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #08090a;
+            --bg-card: #121314;
+            --bg-hover: #1a1b1c;
+            --bg-input: #0d0e0f;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b8b;
+            --text-muted: #5a5a5a;
+            --border: #2a2b2c;
+            --border-light: #3a3b3c;
+            --accent-success: #00d4aa;
+            --accent-warning: #ff6b6b;
+            --accent-neutral: #ffa500;
+            --accent-info: #4a90d9;
+            --accent-purple: #8b5cf6;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            max-width: 420px;
+            margin: 0 auto;
+            padding-bottom: 100px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+        }
+        
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+        
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Match Hero */
+        .match-hero {
+            padding: 20px 16px;
+            text-align: center;
+            background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-primary) 100%);
+        }
+        
+        .league-tag {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-hover);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            margin-bottom: 12px;
+        }
+        
+        .teams-display {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            margin-bottom: 12px;
+        }
+        
+        .team-block {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .team-logo-large {
+            width: 56px;
+            height: 56px;
+            background: var(--bg-hover);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            font-weight: 700;
+            border: 2px solid var(--border);
+        }
+        
+        .team-name-large {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .vs-text {
+            font-size: 13px;
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+        
+        .match-info {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        /* Data Source Badge */
+        .data-source {
+            margin: 12px 16px;
+            background: rgba(74,144,217,0.1);
+            border: 1px solid rgba(74,144,217,0.3);
+            border-radius: var(--radius-md);
+            padding: 10px 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .source-label {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .source-name {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-info);
+        }
+        
+        .source-update {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        
+        /* Odds Section */
+        .odds-section {
+            margin: 16px;
+        }
+        
+        .odds-section-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .odds-section-title::before {
+            content: '';
+            width: 3px;
+            height: 14px;
+            background: var(--accent-success);
+            border-radius: 1px;
+        }
+        
+        /* Play Type Tabs */
+        .play-type-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 12px;
+        }
+        
+        .play-tab {
+            flex: 1;
+            padding: 10px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .play-tab.active {
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            border-color: var(--accent-success);
+        }
+        
+        /* Odds Table */
+        .odds-table {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            overflow: hidden;
+        }
+        
+        .odds-table-header {
+            display: grid;
+            grid-template-columns: 1fr repeat(3, 1fr);
+            padding: 10px 12px;
+            background: var(--bg-hover);
+            font-size: 12px;
+            color: var(--text-muted);
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .odds-table-row {
+            display: grid;
+            grid-template-columns: 1fr repeat(3, 1fr);
+            padding: 10px 12px;
+            font-size: 13px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .odds-table-row:last-child {
+            border-bottom: none;
+        }
+        
+        .odds-platform {
+            font-weight: 500;
+        }
+        
+        .odds-value {
+            text-align: center;
+            font-family: var(--font-mono);
+        }
+        
+        .odds-value.best {
+            color: var(--accent-success);
+            font-weight: 700;
+            background: rgba(0,212,170,0.1);
+            border-radius: var(--radius-sm);
+            padding: 4px 8px;
+            margin: -4px -8px;
+        }
+        
+        .odds-value.negative {
+            color: var(--accent-warning);
+        }
+        
+        /* Recommendation */
+        .recommendation-box {
+            margin: 12px 0;
+            background: linear-gradient(135deg, rgba(0,212,170,0.1) 0%, rgba(0,212,170,0.05) 100%);
+            border: 1px solid rgba(0,212,170,0.3);
+            border-radius: var(--radius-md);
+            padding: 12px;
+        }
+        
+        .rec-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .rec-icon {
+            font-size: 16px;
+        }
+        
+        .rec-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-success);
+        }
+        
+        .rec-detail {
+            font-size: 12px;
+            color: var(--text-primary);
+            line-height: 1.6;
+        }
+        
+        .rec-no-value {
+            background: rgba(255,107,107,0.1);
+            border: 1px solid rgba(255,107,107,0.3);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            font-size: 13px;
+            color: var(--accent-warning);
+            text-align: center;
+        }
+        
+        /* Bet Plans Section */
+        .plans-section {
+            margin: 16px;
+        }
+        
+        .plans-title {
+            font-size: 16px;
+            font-weight: 700;
+            margin-bottom: 16px;
+        }
+        
+        .plans-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+        
+        /* Plan Card */
+        .plan-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .plan-card:hover {
+            background: var(--bg-hover);
+        }
+        
+        .plan-card.selected {
+            border-color: var(--accent-success);
+            background: rgba(0,212,170,0.05);
+        }
+        
+        .plan-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .plan-name {
+            font-size: 15px;
+            font-weight: 600;
+        }
+        
+        .plan-risk {
+            font-size: 11px;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+        
+        .plan-risk.low {
+            background: var(--accent-success);
+            color: var(--bg-primary);
+        }
+        
+        .plan-risk.medium {
+            background: var(--accent-neutral);
+            color: var(--bg-primary);
+        }
+        
+        .plan-risk.high {
+            background: var(--accent-warning);
+            color: var(--bg-primary);
+        }
+        
+        /* Plan Bet Items */
+        .plan-bets {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        
+        .bet-item {
+            background: var(--bg-hover);
+            border-radius: var(--radius-md);
+            padding: 12px;
+        }
+        
+        .bet-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 6px;
+        }
+        
+        .bet-target {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .bet-amount {
+            font-size: 15px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--accent-success);
+        }
+        
+        .bet-item-detail {
+            font-size: 12px;
+            color: var(--text-secondary);
+            display: flex;
+            gap: 12px;
+        }
+        
+        .bet-odds {
+            font-family: var(--font-mono);
+        }
+        
+        .bet-return {
+            color: var(--accent-success);
+        }
+        
+        /* Plan Summary */
+        .plan-summary {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: var(--bg-hover);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-top: 12px;
+        }
+        
+        .summary-item {
+            text-align: center;
+        }
+        
+        .summary-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .summary-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            margin-top: 4px;
+        }
+        
+        .summary-value.positive {
+            color: var(--accent-success);
+        }
+        
+        /* Copy Button */
+        .copy-btn {
+            width: 100%;
+            padding: 14px;
+            background: var(--accent-purple);
+            color: var(--bg-primary);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        
+        /* Analysis Section */
+        .analysis-section {
+            margin: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .analysis-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .analysis-content {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Footer */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-success);
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+        }
+        
+        /* Hide sections */
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="back-btn" onclick="location.href='index.html'">←</div>
+        <span class="header-title">比赛详情</span>
+    </header>
+    
+    <!-- Match Hero -->
+    <div class="match-hero">
+        <div class="league-tag">英超 · 第35轮</div>
+        <div class="teams-display">
+            <div class="team-block">
+                <div class="team-logo-large">MC</div>
+                <span class="team-name-large">曼城</span>
+            </div>
+            <span class="vs-text">VS</span>
+            <div class="team-block">
+                <div class="team-logo-large">BF</div>
+                <span class="team-name-large">布伦特福德</span>
+            </div>
+        </div>
+        <div class="match-info">今晚 21:00 · Etihad Stadium</div>
+    </div>
+    
+    <!-- Data Source -->
+    <div class="data-source">
+        <div>
+            <span class="source-label">赔率数据来源</span>
+            <span class="source-name">Odds-API.io</span>
+        </div>
+        <span class="source-update">更新: 18:30</span>
+    </div>
+    
+    <!-- Odds Section -->
+    <div class="odds-section">
+        <div class="odds-section-title">实时赔率对比</div>
+        
+        <!-- Play Type Tabs -->
+        <div class="play-type-tabs">
+            <div class="play-tab active" onclick="switchPlay('1x2')">胜平负</div>
+            <div class="play-tab" onclick="switchPlay('ou')">大小球</div>
+            <div class="play-tab" onclick="switchPlay('ah')">让球</div>
+        </div>
+        
+        <!-- 1X2 Odds -->
+        <div id="odds-1x2">
+            <div class="odds-table">
+                <div class="odds-table-header">
+                    <span>平台</span>
+                    <span>主胜</span>
+                    <span>平局</span>
+                    <span>客胜</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Bet365</span>
+                    <span class="odds-value best">1.42</span>
+                    <span class="odds-value">4.50</span>
+                    <span class="odds-value">8.00</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Sbobet</span>
+                    <span class="odds-value">1.40</span>
+                    <span class="odds-value">4.40</span>
+                    <span class="odds-value">7.80</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Pinnacle</span>
+                    <span class="odds-value">1.43</span>
+                    <span class="odds-value best">4.55</span>
+                    <span class="odds-value best">8.20</span>
+                </div>
+            </div>
+            
+            <div class="recommendation-box">
+                <div class="rec-header">
+                    <span class="rec-icon">✓</span>
+                    <span class="rec-title">推荐：Bet365 主胜</span>
+                </div>
+                <div class="rec-detail">
+                    最优赔率 1.42，模型概率 75%，隐含概率 70%，价值优势 +5%
+                </div>
+            </div>
+        </div>
+        
+        <!-- Over/Under Odds -->
+        <div id="odds-ou" class="hidden">
+            <div class="odds-table">
+                <div class="odds-table-header">
+                    <span>平台</span>
+                    <span>大2.5</span>
+                    <span>小2.5</span>
+                    <span>盘口</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Bet365</span>
+                    <span class="odds-value">1.85</span>
+                    <span class="odds-value">1.95</span>
+                    <span class="odds-value">2.5</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Sbobet</span>
+                    <span class="odds-value">1.80</span>
+                    <span class="odds-value best">2.00</span>
+                    <span class="odds-value">2.5</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Pinnacle</span>
+                    <span class="odds-value">1.82</span>
+                    <span class="odds-value">1.98</span>
+                    <span class="odds-value">2.5</span>
+                </div>
+            </div>
+            
+            <div class="recommendation-box">
+                <div class="rec-header">
+                    <span class="rec-icon">✓</span>
+                    <span class="rec-title">推荐：Sbobet 小2.5球</span>
+                </div>
+                <div class="rec-detail">
+                    最优赔率 2.00，模型概率 55%，隐含概率 50%，价值优势 +5%
+                </div>
+            </div>
+        </div>
+        
+        <!-- Asian Handicap Odds -->
+        <div id="odds-ah" class="hidden">
+            <div class="odds-table">
+                <div class="odds-table-header">
+                    <span>平台</span>
+                    <span>曼城</span>
+                    <span>布伦特</span>
+                    <span>盘口</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Bet365</span>
+                    <span class="odds-value">1.75</span>
+                    <span class="odds-value">2.10</span>
+                    <span class="odds-value negative">-1.5</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Sbobet</span>
+                    <span class="odds-value best">1.80</span>
+                    <span class="odds-value">2.05</span>
+                    <span class="odds-value negative">-1.5</span>
+                </div>
+                <div class="odds-table-row">
+                    <span class="odds-platform">Pinnacle</span>
+                    <span class="odds-value">1.78</span>
+                    <span class="odds-value best">2.15</span>
+                    <span class="odds-value negative">-1.5</span>
+                </div>
+            </div>
+            
+            <div class="rec-no-value">
+                ⚠️ 让球盘暂无价值优势<br>
+                <span style="font-size: 11px; color: var(--text-muted);">曼城-1.5 需净胜2球，概率仅45%</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bet Plans Section -->
+    <div class="plans-section">
+        <div class="plans-title">投注方案</div>
+        <div class="plans-subtitle">根据Kelly Criterion生成多套方案，选择适合你的风险偏好</div>
+        
+        <!-- Plan A: Conservative -->
+        <div class="plan-card selected" onclick="selectPlan(this)">
+            <div class="plan-header">
+                <span class="plan-name">方案A · 分散保守</span>
+                <span class="plan-risk low">风险 20</span>
+            </div>
+            <div class="plan-bets">
+                <div class="bet-item">
+                    <div class="bet-item-header">
+                        <span class="bet-target">Bet365 · 胜平负 · 主胜</span>
+                        <span class="bet-amount">¥60</span>
+                    </div>
+                    <div class="bet-item-detail">
+                        <span class="bet-odds">赔率 1.42</span>
+                        <span class="bet-return">预期 +¥25</span>
+                    </div>
+                </div>
+                <div class="bet-item">
+                    <div class="bet-item-header">
+                        <span class="bet-target">Sbobet · 大小球 · 小2.5</span>
+                        <span class="bet-amount">¥40</span>
+                    </div>
+                    <div class="bet-item-detail">
+                        <span class="bet-odds">赔率 2.00</span>
+                        <span class="bet-return">预期 +¥40</span>
+                    </div>
+                </div>
+            </div>
+            <div class="plan-summary">
+                <div class="summary-item">
+                    <span class="summary-label">总投入</span>
+                    <span class="summary-value">¥100</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">预期ROI</span>
+                    <span class="summary-value positive">+65%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">胜率估算</span>
+                    <span class="summary-value">~75%</span>
+                </div>
+            </div>
+            <div class="copy-btn" onclick="copyPlan('A')">复制方案到投注平台</div>
+        </div>
+        
+        <!-- Plan B: Balanced -->
+        <div class="plan-card" onclick="selectPlan(this)">
+            <div class="plan-header">
+                <span class="plan-name">方案B · 单注平衡</span>
+                <span class="plan-risk medium">风险 40</span>
+            </div>
+            <div class="plan-bets">
+                <div class="bet-item">
+                    <div class="bet-item-header">
+                        <span class="bet-target">Bet365 · 胜平负 · 主胜</span>
+                        <span class="bet-amount">¥100</span>
+                    </div>
+                    <div class="bet-item-detail">
+                        <span class="bet-odds">赔率 1.42</span>
+                        <span class="bet-return">预期 +¥42</span>
+                    </div>
+                </div>
+            </div>
+            <div class="plan-summary">
+                <div class="summary-item">
+                    <span class="summary-label">总投入</span>
+                    <span class="summary-value">¥100</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">预期ROI</span>
+                    <span class="summary-value positive">+42%</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">Kelly比例</span>
+                    <span class="summary-value">10%</span>
+                </div>
+            </div>
+            <div class="copy-btn" onclick="copyPlan('B')">复制方案到投注平台</div>
+        </div>
+        
+        <!-- Plan C: Aggressive -->
+        <div class="plan-card" onclick="selectPlan(this)">
+            <div class="plan-header">
+                <span class="plan-name">方案C · 串关激进</span>
+                <span class="plan-risk high">风险 60</span>
+            </div>
+            <div class="plan-bets">
+                <div class="bet-item">
+                    <div class="bet-item-header">
+                        <span class="bet-target">串关2串1</span>
+                        <span class="bet-amount">¥50</span>
+                    </div>
+                    <div class="bet-item-detail">
+                        <span>主胜 @1.42 + 小2.5 @2.00</span>
+                    </div>
+                </div>
+            </div>
+            <div class="plan-summary">
+                <div class="summary-item">
+                    <span class="summary-label">组合赔率</span>
+                    <span class="summary-value">2.84</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">预期收益</span>
+                    <span class="summary-value positive">+¥92</span>
+                </div>
+                <div class="summary-item">
+                    <span class="summary-label">胜率估算</span>
+                    <span class="summary-value">~35%</span>
+                </div>
+            </div>
+            <div class="copy-btn" onclick="copyPlan('C')">复制方案到投注平台</div>
+        </div>
+    </div>
+    
+    <!-- Analysis Section -->
+    <div class="analysis-section">
+        <div class="analysis-title">预测分析依据</div>
+        <div class="analysis-content">
+            <strong>Poisson模型结果：</strong><br>
+            • 曼城主场场均进球 2.1，失球 0.8<br>
+            • 布伦特福德客场场均进球 1.2，失球 1.5<br>
+            • 最可能比分：2-0 (概率18%)，2-1 (概率15%)<br>
+            <br>
+            <strong>Kelly计算：</strong><br>
+            • Half-Kelly建议：主胜投注比例 6%<br>
+            • 置信度评级：75% (高置信)<br>
+            • 风险提示：赔率变动需关注临场变化
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <nav class="footer-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <div class="nav-icon">🏠</div>
+            <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-item active">
+            <div class="nav-icon">📅</div>
+            <span class="nav-label">比赛</span>
+        </div>
+        <div class="nav-item" onclick="location.href='combo.html'">
+            <div class="nav-icon">📊</div>
+            <span class="nav-label">组合</span>
+        </div>
+        <div class="nav-item" onclick="location.href='tracker.html'">
+            <div class="nav-icon">📈</div>
+            <span class="nav-label">追踪</span>
+        </div>
+    </nav>
+    
+    <script>
+        function switchPlay(type) {
+            document.querySelectorAll('.play-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('odds-1x2').classList.add('hidden');
+            document.getElementById('odds-ou').classList.add('hidden');
+            document.getElementById('odds-ah').classList.add('hidden');
+            
+            document.getElementById('odds-' + type).classList.remove('hidden');
+        }
+        
+        function selectPlan(card) {
+            document.querySelectorAll('.plan-card').forEach(c => c.classList.remove('selected'));
+            card.classList.add('selected');
+        }
+        
+        function copyPlan(plan) {
+            const plans = {
+                'A': '【KickBet方案A】\n1. Bet365 胜平负 主胜 ¥60 @1.42\n2. Sbobet 大小球 小2.5 ¥40 @2.00\n总投入 ¥100，预期ROI +65%',
+                'B': '【KickBet方案B】\nBet365 胜平负 主胜 ¥100 @1.42\n总投入 ¥100，预期ROI +42%',
+                'C': '【KickBet方案C】\n串关2串1：主胜 + 小2.5\n组合赔率 2.84，投注 ¥50\n预期收益 +¥92'
+            };
+            
+            if (navigator.clipboard) {
+                navigator.clipboard.writeText(plans[plan]);
+                alert('方案已复制！请前往对应投注平台执行。');
+            } else {
+                alert('复制内容：\n' + plans[plan]);
+            }
+        }
+    </script>
+</body>
+</html>

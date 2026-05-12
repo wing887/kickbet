@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KickBet - 组合投注</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #08090a;
+            --bg-card: #121314;
+            --bg-hover: #1a1b1c;
+            --bg-input: #0d0e0f;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b8b;
+            --text-muted: #5a5a5a;
+            --border: #2a2b2c;
+            --border-light: #3a3b3c;
+            --accent-success: #00d4aa;
+            --accent-warning: #ff6b6b;
+            --accent-neutral: #ffa500;
+            --accent-info: #4a90d9;
+            --accent-purple: #8b5cf6;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            max-width: 420px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+        }
+        
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+        
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .header-badge {
+            font-size: 11px;
+            background: var(--accent-purple);
+            color: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            margin-left: 12px;
+        }
+        
+        /* Info Banner */
+        .info-banner {
+            background: linear-gradient(135deg, rgba(74,144,217,0.1) 0%, rgba(74,144,217,0.05) 100%);
+            border: 1px solid rgba(74,144,217,0.3);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            margin: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .info-icon {
+            font-size: 20px;
+        }
+        
+        .info-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+        }
+        
+        /* Step 1: Match Selection */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 16px 16px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .step-number {
+            width: 20px;
+            height: 20px;
+            background: var(--accent-info);
+            color: var(--bg-primary);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        /* Match Selector */
+        .match-selector {
+            margin: 8px 16px;
+        }
+        
+        .selector-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .selector-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .selector-match {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .selector-league {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .bet-type-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .bet-type-btn {
+            padding: 8px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .bet-type-btn:hover {
+            background: rgba(0,212,170,0.1);
+        }
+        
+        .bet-type-btn.selected {
+            background: rgba(0,212,170,0.2);
+            border-color: var(--accent-success);
+        }
+        
+        .bet-type-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .bet-type-odds {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+            margin-top: 2px;
+        }
+        
+        .bet-type-btn.selected .bet-type-odds {
+            color: var(--accent-success);
+        }
+        
+        /* Add Match Button */
+        .add-match-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .add-match-btn:hover {
+            border-color: var(--accent-info);
+            color: var(--accent-info);
+        }
+        
+        /* Step 2: Budget Input */
+        .budget-section {
+            margin: 16px;
+        }
+        
+        .budget-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .budget-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .budget-input-row {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .budget-input {
+            flex: 1;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px 16px;
+            font-size: 16px;
+            font-family: var(--font-mono);
+            color: var(--text-primary);
+            outline: none;
+        }
+        
+        .budget-input:focus {
+            border-color: var(--accent-info);
+        }
+        
+        .risk-select {
+            width: 120px;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            font-size: 14px;
+            color: var(--text-primary);
+        }
+        
+        /* Step 3: Generate Button */
+        .generate-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: calc(100% - 32px);
+            margin: 8px 16px 16px;
+            padding: 16px;
+            background: var(--accent-info);
+            color: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .generate-btn:hover {
+            opacity: 0.9;
+        }
+        
+        .generate-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Results Section */
+        .results-section {
+            margin: 16px;
+            display: none;
+        }
+        
+        .results-section.show {
+            display: block;
+        }
+        
+        .results-header {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .results-badge {
+            font-size: 11px;
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+        }
+        
+        /* Kelly Allocation Results */
+        .kelly-results {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+        
+        .kelly-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-neutral);
+            margin-bottom: 12px;
+        }
+        
+        .kelly-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 12px;
+            background: var(--bg-hover);
+            border-radius: var(--radius-md);
+            margin-bottom: 8px;
+        }
+        
+        .kelly-item-left {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .kelly-match-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .kelly-bet-type {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .kelly-item-right {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        
+        .kelly-amount {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+            color: var(--accent-neutral);
+        }
+        
+        .kelly-percent {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        /* Parlay Suggestions */
+        .parlay-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .parlay-title {
+            font-size: 13px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .parlay-card {
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        .parlay-card:hover {
+            border-color: var(--accent-info);
+        }
+        
+        .parlay-card.recommended {
+            border-color: var(--accent-success);
+            background: rgba(0,212,170,0.1);
+        }
+        
+        .parlay-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .parlay-type {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .parlay-risk {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .parlay-risk.low {
+            background: var(--accent-success);
+            color: var(--bg-primary);
+        }
+        
+        .parlay-risk.medium {
+            background: var(--accent-neutral);
+            color: var(--bg-primary);
+        }
+        
+        .parlay-risk.high {
+            background: var(--accent-warning);
+            color: var(--bg-primary);
+        }
+        
+        .parlay-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .parlay-stat {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .parlay-stat-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .parlay-stat-value {
+            font-size: 14px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+        
+        .parlay-recommended-badge {
+            font-size: 11px;
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            text-align: center;
+            margin-top: 8px;
+        }
+        
+        /* Summary Box */
+        .summary-box {
+            background: linear-gradient(135deg, rgba(0,212,170,0.1) 0%, rgba(0,212,170,0.05) 100%);
+            border: 1px solid rgba(0,212,170,0.3);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+        }
+        
+        .summary-label {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .summary-value {
+            font-size: 16px;
+            font-weight: 600;
+            font-family: var(--font-mono);
+        }
+        
+        .summary-value.highlight {
+            color: var(--accent-success);
+        }
+        
+        /* Footer */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-success);
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="back-btn" onclick="location.href='index.html'">←</div>
+        <span class="header-title">组合投注</span>
+        <span class="header-badge">会员专属</span>
+    </header>
+    
+    <!-- Info Banner -->
+    <div class="info-banner">
+        <span class="info-icon">💡</span>
+        <span class="info-text">Kelly Criterion科学分配资金 + 智能串关建议，帮助您优化投注策略</span>
+    </div>
+    
+    <!-- Step 1: Match Selection -->
+    <div class="section-title">
+        <span class="step-number">1</span>
+        <span>选择比赛</span>
+    </div>
+    
+    <div class="match-selector">
+        <!-- Match 1 -->
+        <div class="selector-card">
+            <div class="selector-header">
+                <span class="selector-match">曼城 vs 布伦特福德</span>
+                <span class="selector-league">英超</span>
+            </div>
+            <div class="bet-type-grid">
+                <div class="bet-type-btn selected" onclick="selectBetType(this)">
+                    <span class="bet-type-label">主胜</span>
+                    <span class="bet-type-odds">1.42</span>
+                </div>
+                <div class="bet-type-btn" onclick="selectBetType(this)">
+                    <span class="bet-type-label">平局</span>
+                    <span class="bet-type-odds">4.50</span>
+                </div>
+                <div class="bet-type-btn" onclick="selectBetType(this)">
+                    <span class="bet-type-label">客胜</span>
+                    <span class="bet-type-odds">8.00</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Match 2 -->
+        <div class="selector-card">
+            <div class="selector-header">
+                <span class="selector-match">山东泰山 vs 浙江队</span>
+                <span class="selector-league">中超</span>
+            </div>
+            <div class="bet-type-grid">
+                <div class="bet-type-btn selected" onclick="selectBetType(this)">
+                    <span class="bet-type-label">主胜</span>
+                    <span class="bet-type-odds">1.65</span>
+                </div>
+                <div class="bet-type-btn" onclick="selectBetType(this)">
+                    <span class="bet-type-label">平局</span>
+                    <span class="bet-type-odds">3.50</span>
+                </div>
+                <div class="bet-type-btn" onclick="selectBetType(this)">
+                    <span class="bet-type-label">客胜</span>
+                    <span class="bet-type-odds">5.00</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Match 3 -->
+        <div class="selector-card">
+            <div class="selector-header">
+                <span class="selector-match">川崎前锋 vs 浦和红钻</span>
+                <span class="selector-league">日职</span>
+            </div>
+            <div class="bet-type-grid">
+                <div class="bet-type-btn" onclick="selectBetType(this)">
+                    <span class="bet-type-label">主胜</span>
+                    <span class="bet-type-odds">2.10</span>
+                </div>
+                <div class="bet-type-btn selected" onclick="selectBetType(this)">
+                    <span class="bet-type-label">平局</span>
+                    <span class="bet-type-odds">3.20</span>
+                </div>
+                <div class="bet-type-btn" onclick="selectBetType(this)">
+                    <span class="bet-type-label">客胜</span>
+                    <span class="bet-type-odds">3.80</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="add-match-btn" onclick="alert('添加更多比赛')">
+            <span>+ 添加比赛</span>
+        </div>
+    </div>
+    
+    <!-- Step 2: Budget Input -->
+    <div class="section-title">
+        <span class="step-number">2</span>
+        <span>输入资金</span>
+    </div>
+    
+    <div class="budget-section">
+        <div class="budget-card">
+            <div class="budget-header">总投注预算</div>
+            <div class="budget-input-row">
+                <input type="number" class="budget-input" placeholder="¥1000" value="1000">
+                <select class="risk-select">
+                    <option value="half">保守(Half)</option>
+                    <option value="full">激进(Full)</option>
+                </select>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Step 3: Generate -->
+    <div class="section-title">
+        <span class="step-number">3</span>
+        <span>生成建议</span>
+    </div>
+    
+    <button class="generate-btn" onclick="generateResults()">
+        <span>生成组合建议</span>
+    </button>
+    
+    <!-- Results Section -->
+    <div class="results-section" id="results">
+        <div class="results-header">
+            <span>Kelly资金分配</span>
+            <span class="results-badge">完成</span>
+        </div>
+        
+        <div class="kelly-results">
+            <div class="kelly-title">Half-Kelly分配结果</div>
+            
+            <div class="kelly-item">
+                <div class="kelly-item-left">
+                    <span class="kelly-match-name">曼城 vs 布伦特福德</span>
+                    <span class="kelly-bet-type">主胜 @ 1.42</span>
+                </div>
+                <div class="kelly-item-right">
+                    <span class="kelly-amount">¥60</span>
+                    <span class="kelly-percent">6% (置信度75%)</span>
+                </div>
+            </div>
+            
+            <div class="kelly-item">
+                <div class="kelly-item-left">
+                    <span class="kelly-match-name">山东泰山 vs 浙江队</span>
+                    <span class="kelly-bet-type">主胜 @ 1.65</span>
+                </div>
+                <div class="kelly-item-right">
+                    <span class="kelly-amount">¥40</span>
+                    <span class="kelly-percent">4% (置信度65%)</span>
+                </div>
+            </div>
+            
+            <div class="kelly-item">
+                <div class="kelly-item-left">
+                    <span class="kelly-match-name">川崎前锋 vs 浦和红钻</span>
+                    <span class="kelly-bet-type">平局 @ 3.20</span>
+                </div>
+                <div class="kelly-item-right">
+                    <span class="kelly-amount">¥15</span>
+                    <span class="kelly-percent">1.5% (置信度35%)</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Parlay Suggestions -->
+        <div class="results-header">
+            <span>串关建议</span>
+        </div>
+        
+        <div class="parlay-section">
+            <div class="parlay-title">推荐串关方案</div>
+            
+            <div class="parlay-card recommended">
+                <div class="parlay-header">
+                    <span class="parlay-type">双串关</span>
+                    <span class="parlay-risk low">低风险</span>
+                </div>
+                <div class="parlay-stats">
+                    <div class="parlay-stat">
+                        <span class="parlay-stat-label">组合赔率</span>
+                        <span class="parlay-stat-value">2.34</span>
+                    </div>
+                    <div class="parlay-stat">
+                        <span class="parlay-stat-label">胜率估算</span>
+                        <span class="parlay-stat-value">48%</span>
+                    </div>
+                    <div class="parlay-stat">
+                        <span class="parlay-stat-label">建议金额</span>
+                        <span class="parlay-stat-value">¥50</span>
+                    </div>
+                </div>
+                <div class="parlay-recommended-badge">✓ 推荐方案</div>
+            </div>
+            
+            <div class="parlay-card">
+                <div class="parlay-header">
+                    <span class="parlay-type">三串关</span>
+                    <span class="parlay-risk medium">中风险</span>
+                </div>
+                <div class="parlay-stats">
+                    <div class="parlay-stat">
+                        <span class="parlay-stat-label">组合赔率</span>
+                        <span class="parlay-stat-value">7.5</span>
+                    </div>
+                    <div class="parlay-stat">
+                        <span class="parlay-stat-label">胜率估算</span>
+                        <span class="parlay-stat-value">17%</span>
+                    </div>
+                    <div class="parlay-stat">
+                        <span class="parlay-stat-label">建议金额</span>
+                        <span class="parlay-stat-value">¥30</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Summary -->
+        <div class="summary-box">
+            <div class="summary-row">
+                <span class="summary-label">风险评分</span>
+                <span class="summary-value">35/100</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">期望ROI</span>
+                <span class="summary-value highlight">+8.5%</span>
+            </div>
+            <div class="summary-row">
+                <span class="summary-label">建议策略</span>
+                <span class="summary-value">单注分散 + 双串关</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <nav class="footer-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <div class="nav-icon">🏠</div>
+            <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-item" onclick="location.href='match-detail.html'">
+            <div class="nav-icon">📅</div>
+            <span class="nav-label">比赛</span>
+        </div>
+        <div class="nav-item active">
+            <div class="nav-icon">📊</div>
+            <span class="nav-label">组合</span>
+        </div>
+        <div class="nav-item" onclick="location.href='tracker.html'">
+            <div class="nav-icon">📈</div>
+            <span class="nav-label">追踪</span>
+        </div>
+    </nav>
+    
+    <script>
+        function selectBetType(btn) {
+            const grid = btn.parentElement;
+            grid.querySelectorAll('.bet-type-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+        }
+        
+        function generateResults() {
+            document.getElementById('results').classList.add('show');
+            // Scroll to results
+            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+        }
+    </script>
+</body>
+</html>

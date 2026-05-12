@@ -1,0 +1,82 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    font-family: 'Inter', system-ui, sans-serif;
+    background-color: #08090a;
+    color: #ffffff;
+  }
+  
+  body {
+    min-height: 100vh;
+    margin: 0;
+    padding: 0;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+  }
+}
+
+@layer components {
+  .kb-card {
+    @apply bg-kb-bg-card rounded-card border border-kb-border backdrop-blur-card;
+  }
+  
+  .kb-card-hover {
+    @apply hover:border-kb-border-hover transition-all duration-200;
+  }
+  
+  .kb-btn {
+    @apply px-4 py-2 rounded-button font-medium transition-all duration-200;
+  }
+  
+  .kb-btn-primary {
+    @apply bg-kb-accent text-white hover:bg-kb-accent-hover;
+  }
+  
+  .kb-btn-secondary {
+    @apply bg-kb-bg-secondary text-kb-text-secondary border border-kb-border hover:border-kb-border-hover;
+  }
+  
+  .kb-tag {
+    @apply px-2 py-1 rounded text-xs font-medium;
+  }
+  
+  .kb-tag-success {
+    @apply bg-kb-success/20 text-kb-success;
+  }
+  
+  .kb-tag-warning {
+    @apply bg-kb-warning/20 text-kb-warning;
+  }
+  
+  .kb-tag-danger {
+    @apply bg-kb-danger/20 text-kb-danger;
+  }
+  
+  .kb-tag-neutral {
+    @apply bg-kb-accent/20 text-kb-accent;
+  }
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

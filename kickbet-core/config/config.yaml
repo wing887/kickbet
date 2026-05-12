@@ -1,0 +1,81 @@
+# KickBet Core 配置
+# 五大联赛专用
+
+# 五大联赛配置 (Football-Data.org codes -> Odds-API.io slugs)
+leagues:
+  PL:
+    name: "英超"
+    name_en: "Premier League"
+    odds_slug: "england-premier-league"
+    priority: 1
+  BL1:
+    name: "德甲"
+    name_en: "Bundesliga"
+    odds_slug: "germany-bundesliga"
+    priority: 2
+  PD:
+    name: "西甲"
+    name_en: "La Liga"
+    odds_slug: "spain-la-liga"
+    priority: 3
+  SA:
+    name: "意甲"
+    name_en: "Serie A"
+    odds_slug: "italy-serie-a"
+    priority: 4
+  FL1:
+    name: "法甲"
+    name_en: "Ligue 1"
+    odds_slug: "france-ligue-1"
+    priority: 5
+
+# API配置
+api:
+  # Football-Data.org (比赛数据 + 球队统计)
+  football_data:
+    base_url: "https://api.football-data.org/v4"
+    api_key: "84e1509844e14a469520d5ed4fb7f148"  # 已配置
+    rate_limit: 10  # 每分钟
+  
+  # Odds-API.io (赔率数据)
+  odds_api_io:
+    base_url: "https://api.odds-api.io/v3"
+    api_key: "cbed45cdeb7ea196b7ba4335757cf3d4beaf6654ee2b73b30a29fd2c2b38e46b"  # 新API key (2026-05-10)
+    rate_limit: 100  # 每小时
+    free_bookmakers:
+      - "Bet365"
+      - "Sbobet"
+
+# 预测配置
+prediction:
+  nsim: 10000  # Monte Carlo模拟次数
+  min_edge: 0.02  # Kelly最小价值阈值
+  max_fraction: 0.25  # Kelly最大投注比例
+  
+# 投注方案配置
+schemes:
+  conservative:
+    name: "保守型"
+    risk_level: 20
+    max_kelly_fraction: 0.10
+  balanced:
+    name: "平衡型"
+    risk_level: 40
+    max_kelly_fraction: 0.15
+  aggressive:
+    name: "激进型"
+    risk_level: 60
+    max_kelly_fraction: 0.25
+
+# 玩法类型
+play_types:
+  - code: "1X2"
+    name: "胜平负"
+    market: "ML"
+  - code: "OU"
+    name: "大小球"
+    market: "Totals"
+    default_line: 2.5
+  - code: "AH"
+    name: "让球盘"
+    market: "Spread"

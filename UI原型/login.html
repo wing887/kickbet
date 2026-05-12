@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KickBet - 登录</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #08090a;
+            --bg-card: #121314;
+            --bg-hover: #1a1b1c;
+            --bg-input: #0d0e0f;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b8b;
+            --text-muted: #5a5a5a;
+            --border: #2a2b2c;
+            --border-light: #3a3b3c;
+            --accent-success: #00d4aa;
+            --accent-warning: #ff6b6b;
+            --accent-neutral: #ffa500;
+            --accent-info: #4a90d9;
+            --accent-purple: #8b5cf6;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            max-width: 420px;
+            margin: 0 auto;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Logo Section */
+        .logo-section {
+            padding: 48px 16px 32px;
+            text-align: center;
+        }
+        
+        .logo {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--accent-success);
+            margin-bottom: 8px;
+        }
+        
+        .logo-subtitle {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* Form Section */
+        .form-section {
+            padding: 16px;
+            flex: 1;
+        }
+        
+        .form-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 24px;
+        }
+        
+        .form-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+        
+        .form-tab {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            cursor: pointer;
+            text-align: center;
+        }
+        
+        .form-tab.active {
+            background: var(--accent-info);
+            color: var(--bg-primary);
+            border-color: var(--accent-info);
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-label {
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            display: block;
+        }
+        
+        .form-input {
+            width: 100%;
+            background: var(--bg-input);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 14px 16px;
+            font-size: 14px;
+            color: var(--text-primary);
+            outline: none;
+            font-family: var(--font-main);
+        }
+        
+        .form-input:focus {
+            border-color: var(--accent-info);
+        }
+        
+        .form-input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-error {
+            font-size: 12px;
+            color: var(--accent-warning);
+            margin-top: 6px;
+            display: none;
+        }
+        
+        .form-error.show {
+            display: block;
+        }
+        
+        .form-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+        }
+        
+        .remember-me {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .checkbox {
+            width: 18px;
+            height: 18px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .checkbox.checked {
+            background: var(--accent-info);
+            border-color: var(--accent-info);
+            color: var(--bg-primary);
+            font-size: 12px;
+        }
+        
+        .forgot-password {
+            font-size: 13px;
+            color: var(--accent-info);
+            cursor: pointer;
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px;
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-bottom: 16px;
+        }
+        
+        .submit-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* Divider */
+        .divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+        }
+        
+        .divider-line {
+            height: 1px;
+            background: var(--border);
+            flex: 1;
+        }
+        
+        .divider-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        /* Social Login */
+        .social-btns {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .social-btn {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-hover);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .social-btn:hover {
+            background: var(--bg-card);
+            border-color: var(--border-light);
+        }
+        
+        /* Terms */
+        .terms-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-align: center;
+            margin-top: 16px;
+        }
+        
+        .terms-link {
+            color: var(--accent-info);
+            cursor: pointer;
+        }
+        
+        /* Promo Banner */
+        .promo-banner {
+            margin: 16px;
+            background: linear-gradient(135deg, rgba(139,92,246,0.1) 0%, rgba(139,92,246,0.05) 100%);
+            border: 1px solid rgba(139,92,246,0.3);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .promo-text {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .promo-btn {
+            font-size: 12px;
+            background: var(--accent-purple);
+            color: var(--bg-primary);
+            padding: 6px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        
+        /* Footer */
+        .footer {
+            padding: 24px 16px;
+            text-align: center;
+            border-top: 1px solid var(--border);
+        }
+        
+        .footer-text {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+    </style>
+</head>
+<body>
+    <!-- Logo -->
+    <div class="logo-section">
+        <div class="logo">KickBet</div>
+        <div class="logo-subtitle">智能足球预测助手</div>
+    </div>
+    
+    <!-- Form -->
+    <div class="form-section">
+        <div class="form-card">
+            <div class="form-tabs">
+                <div class="form-tab active" onclick="switchTab('login')">登录</div>
+                <div class="form-tab" onclick="switchTab('register')">注册</div>
+            </div>
+            
+            <!-- Login Form -->
+            <div id="login-form">
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input" placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input" placeholder="输入密码">
+                    <div class="form-error" id="password-error">密码错误，请重试</div>
+                </div>
+                
+                <div class="form-actions">
+                    <div class="remember-me" onclick="toggleCheckbox(this)">
+                        <div class="checkbox"></div>
+                        <span>记住我</span>
+                    </div>
+                    <span class="forgot-password" onclick="alert('找回密码')">忘记密码？</span>
+                </div>
+                
+                <button class="submit-btn" onclick="location.href='index.html'">登录</button>
+            </div>
+            
+            <!-- Register Form (hidden) -->
+            <div id="register-form" style="display: none;">
+                <div class="form-group">
+                    <label class="form-label">邮箱</label>
+                    <input type="email" class="form-input" placeholder="your@email.com">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">密码</label>
+                    <input type="password" class="form-input" placeholder="至少6位密码">
+                </div>
+                
+                <div class="form-group">
+                    <label class="form-label">确认密码</label>
+                    <input type="password" class="form-input" placeholder="再次输入密码">
+                </div>
+                
+                <button class="submit-btn" onclick="location.href='index.html'">注册</button>
+            </div>
+            
+            <div class="divider">
+                <div class="divider-line"></div>
+                <span class="divider-text">或</span>
+                <div class="divider-line"></div>
+            </div>
+            
+            <div class="social-btns">
+                <div class="social-btn">
+                    <span>微信</span>
+                </div>
+                <div class="social-btn">
+                    <span>Google</span>
+                </div>
+            </div>
+            
+            <div class="terms-text">
+                注册即表示同意 <span class="terms-link">服务条款</span> 和 <span class="terms-link">隐私政策</span>
+            </div>
+        </div>
+        
+        <!-- Promo Banner -->
+        <div class="promo-banner">
+            <span class="promo-text">新用户专享：首月会员 ¥49</span>
+            <span class="promo-btn" onclick="location.href='subscribe.html'">查看</span>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <div class="footer">
+        <div class="footer-text">KickBet 2026 · 仅提供分析建议</div>
+    </div>
+    
+    <script>
+        function switchTab(type) {
+            document.querySelectorAll('.form-tab').forEach(t => t.classList.remove('active'));
+            if (type === 'login') {
+                document.querySelector('.form-tab:first-child').classList.add('active');
+                document.getElementById('login-form').style.display = 'block';
+                document.getElementById('register-form').style.display = 'none';
+            } else {
+                document.querySelector('.form-tab:last-child').classList.add('active');
+                document.getElementById('login-form').style.display = 'none';
+                document.getElementById('register-form').style.display = 'block';
+            }
+        }
+        
+        function toggleCheckbox(el) {
+            const checkbox = el.querySelector('.checkbox');
+            checkbox.classList.toggle('checked');
+            if (checkbox.classList.contains('checked')) {
+                checkbox.textContent = '✓';
+            } else {
+                checkbox.textContent = '';
+            }
+        }
+    </script>
+</body>
+</html>

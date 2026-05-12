@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KickBet - 首页</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #08090a;
+            --bg-card: #121314;
+            --bg-hover: #1a1b1c;
+            --bg-input: #0d0e0f;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b8b;
+            --text-muted: #5a5a5a;
+            --border: #2a2b2c;
+            --border-light: #3a3b3c;
+            --accent-success: #00d4aa;
+            --accent-warning: #ff6b6b;
+            --accent-neutral: #ffa500;
+            --accent-info: #4a90d9;
+            --accent-purple: #8b5cf6;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            max-width: 420px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--accent-success);
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        /* Data Source Badge */
+        .data-source-bar {
+            background: rgba(74,144,217,0.1);
+            border-bottom: 1px solid rgba(74,144,217,0.2);
+            padding: 8px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .source-text {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        .source-text strong {
+            color: var(--accent-info);
+        }
+        
+        .source-status {
+            font-size: 10px;
+            color: var(--accent-success);
+            font-family: var(--font-mono);
+        }
+        
+        /* Daily Pick Section */
+        .section-title {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 16px 16px 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .section-badge {
+            font-size: 11px;
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+            font-weight: 500;
+        }
+        
+        /* Main Recommendation Card */
+        .main-rec-card {
+            margin: 8px 16px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .match-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .league-badge {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-hover);
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .match-time {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        
+        .teams-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .team {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .team-logo {
+            width: 48px;
+            height: 48px;
+            background: var(--bg-hover);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .team-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .vs {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        /* Best Odds Highlight */
+        .best-odds-box {
+            background: linear-gradient(135deg, rgba(0,212,170,0.15) 0%, rgba(0,212,170,0.05) 100%);
+            border: 1px solid rgba(0,212,170,0.3);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .best-odds-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .best-play-type {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .best-platform {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--accent-info);
+        }
+        
+        .best-odds-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .best-option {
+            font-size: 14px;
+            font-weight: 600;
+            color: var(--accent-success);
+        }
+        
+        .best-odds-value {
+            font-size: 18px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+        
+        .best-confidence {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .conf-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .conf-value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--accent-success);
+        }
+        
+        /* Quick Plans Preview */
+        .plans-preview {
+            background: var(--bg-hover);
+            border-radius: var(--radius-md);
+            padding: 12px;
+        }
+        
+        .plans-preview-title {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .plan-mini {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .plan-mini:last-child {
+            border-bottom: none;
+        }
+        
+        .plan-mini-name {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        .plan-mini-risk {
+            font-size: 11px;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .plan-mini-risk.low {
+            background: var(--accent-success);
+            color: var(--bg-primary);
+        }
+        
+        .plan-mini-risk.medium {
+            background: var(--accent-neutral);
+            color: var(--bg-primary);
+        }
+        
+        .plan-mini-risk.high {
+            background: var(--accent-warning);
+            color: var(--bg-primary);
+        }
+        
+        .plan-mini-roi {
+            font-size: 13px;
+            font-family: var(--font-mono);
+            color: var(--accent-success);
+        }
+        
+        .view-detail-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+            padding: 10px;
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            border-radius: var(--radius-md);
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 12px;
+        }
+        
+        /* League Tabs */
+        .league-tabs {
+            display: flex;
+            gap: 8px;
+            padding: 8px 16px;
+            overflow-x: auto;
+            scrollbar-width: none;
+        }
+        
+        .league-tabs::-webkit-scrollbar {
+            display: none;
+        }
+        
+        .league-tab {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 12px 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            min-width: 72px;
+        }
+        
+        .league-tab.active {
+            border-color: var(--accent-success);
+            background: rgba(0,212,170,0.1);
+        }
+        
+        .league-tab-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .league-tab-count {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        /* Match List */
+        .match-list {
+            padding: 8px 16px;
+        }
+        
+        .match-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 8px;
+            cursor: pointer;
+        }
+        
+        .match-card:hover {
+            background: var(--bg-hover);
+        }
+        
+        .match-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .match-card-teams {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .match-card-league {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .match-card-time {
+            font-size: 12px;
+            color: var(--text-secondary);
+            font-family: var(--font-mono);
+        }
+        
+        /* Multi-Play Odds Preview */
+        .odds-preview-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            margin-top: 8px;
+        }
+        
+        .odds-preview-item {
+            background: var(--bg-hover);
+            border-radius: var(--radius-sm);
+            padding: 8px;
+            text-align: center;
+        }
+        
+        .odds-preview-type {
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+        
+        .odds-preview-best {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+        }
+        
+        .odds-preview-best.has-value {
+            color: var(--accent-success);
+        }
+        
+        .odds-preview-best.no-value {
+            color: var(--text-muted);
+        }
+        
+        /* Value Indicator */
+        .value-tag {
+            font-size: 10px;
+            padding: 2px 6px;
+            border-radius: var(--radius-sm);
+            margin-top: 4px;
+        }
+        
+        .value-tag.positive {
+            background: rgba(0,212,170,0.2);
+            color: var(--accent-success);
+        }
+        
+        .value-tag.neutral {
+            background: var(--bg-hover);
+            color: var(--text-muted);
+        }
+        
+        /* Footer */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-success);
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="logo">KickBet</div>
+        <div class="header-actions">
+            <div class="btn-icon" onclick="location.href='login.html'">👤</div>
+            <div class="btn-icon" onclick="location.href='tracker.html'">📈</div>
+        </div>
+    </header>
+    
+    <!-- Data Source Bar -->
+    <div class="data-source-bar">
+        <span class="source-text">赔率来源：<strong>Odds-API.io</strong> · Bet365 + Sbobet + Pinnacle</span>
+        <span class="source-status">● 实时</span>
+    </div>
+    
+    <!-- Daily Pick Section -->
+    <div class="section-title">
+        <span>今日最佳推荐</span>
+        <span class="section-badge">L4分析</span>
+    </div>
+    
+    <div class="main-rec-card">
+        <div class="match-header">
+            <span class="league-badge">英超</span>
+            <span class="match-time">今晚 21:00</span>
+        </div>
+        
+        <div class="teams-row">
+            <div class="team">
+                <div class="team-logo">MC</div>
+                <span class="team-name">曼城</span>
+            </div>
+            <span class="vs">VS</span>
+            <div class="team">
+                <div class="team-logo">BF</div>
+                <span class="team-name">布伦特福德</span>
+            </div>
+        </div>
+        
+        <div class="best-odds-box">
+            <div class="best-odds-header">
+                <span class="best-play-type">胜平负</span>
+                <span class="best-platform">Bet365</span>
+            </div>
+            <div class="best-odds-content">
+                <span class="best-option">✓ 主胜</span>
+                <span class="best-odds-value">1.42</span>
+            </div>
+            <div class="best-confidence">
+                <span class="conf-label">置信度</span>
+                <span class="conf-value">75%</span>
+            </div>
+        </div>
+        
+        <div class="plans-preview">
+            <div class="plans-preview-title">投注方案预览</div>
+            <div class="plan-mini">
+                <div>
+                    <span class="plan-mini-name">方案A 分散</span>
+                    <span class="plan-mini-risk low">风险20</span>
+                </div>
+                <span class="plan-mini-roi">+65%</span>
+            </div>
+            <div class="plan-mini">
+                <div>
+                    <span class="plan-mini-name">方案B 单注</span>
+                    <span class="plan-mini-risk medium">风险40</span>
+                </div>
+                <span class="plan-mini-roi">+42%</span>
+            </div>
+            <div class="plan-mini">
+                <div>
+                    <span class="plan-mini-name">方案C 串关</span>
+                    <span class="plan-mini-risk high">风险60</span>
+                </div>
+                <span class="plan-mini-roi">+92%</span>
+            </div>
+        </div>
+        
+        <div class="view-detail-btn" onclick="location.href='match-detail.html'">
+            <span>查看完整分析 & 方案</span>
+        </div>
+    </div>
+    
+    <!-- League Tabs -->
+    <div class="section-title">今日赔率</div>
+    <div class="league-tabs">
+        <div class="league-tab active" onclick="switchLeague(this)">
+            <span class="league-tab-name">中超</span>
+            <span class="league-tab-count">3场</span>
+        </div>
+        <div class="league-tab" onclick="switchLeague(this)">
+            <span class="league-tab-name">英超</span>
+            <span class="league-tab-count">5场</span>
+        </div>
+        <div class="league-tab" onclick="switchLeague(this)">
+            <span class="league-tab-name">日职</span>
+            <span class="league-tab-count">2场</span>
+        </div>
+        <div class="league-tab" onclick="switchLeague(this)">
+            <span class="league-tab-name">韩K</span>
+            <span class="league-tab-count">4场</span>
+        </div>
+    </div>
+    
+    <!-- Match List -->
+    <div class="match-list">
+        <div class="match-card" onclick="location.href='match-detail.html'">
+            <div class="match-card-header">
+                <div>
+                    <span class="match-card-teams">上海申花 vs 河南嵩山</span>
+                    <span class="match-card-league">中超</span>
+                </div>
+                <span class="match-card-time">19:35</span>
+            </div>
+            <div class="odds-preview-grid">
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">胜平负</span>
+                    <span class="odds-preview-best has-value">主 2.10</span>
+                    <span class="value-tag positive">+3%</span>
+                </div>
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">大小球</span>
+                    <span class="odds-preview-best has-value">小 1.95</span>
+                    <span class="value-tag positive">+2%</span>
+                </div>
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">让球</span>
+                    <span class="odds-preview-best no-value">—</span>
+                    <span class="value-tag neutral">无价值</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="match-card" onclick="location.href='match-detail.html'">
+            <div class="match-card-header">
+                <div>
+                    <span class="match-card-teams">山东泰山 vs 浙江队</span>
+                    <span class="match-card-league">中超</span>
+                </div>
+                <span class="match-card-time">19:35</span>
+            </div>
+            <div class="odds-preview-grid">
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">胜平负</span>
+                    <span class="odds-preview-best has-value">主 1.65</span>
+                    <span class="value-tag positive">+5%</span>
+                </div>
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">大小球</span>
+                    <span class="odds-preview-best no-value">—</span>
+                    <span class="value-tag neutral">无价值</span>
+                </div>
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">让球</span>
+                    <span class="odds-preview-best has-value">主 1.80</span>
+                    <span class="value-tag positive">+2%</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="match-card" onclick="location.href='match-detail.html'">
+            <div class="match-card-header">
+                <div>
+                    <span class="match-card-teams">北京国安 vs 成都蓉城</span>
+                    <span class="match-card-league">中超</span>
+                </div>
+                <span class="match-card-time">20:00</span>
+            </div>
+            <div class="odds-preview-grid">
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">胜平负</span>
+                    <span class="odds-preview-best has-value">平 3.10</span>
+                    <span class="value-tag positive">+4%</span>
+                </div>
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">大小球</span>
+                    <span class="odds-preview-best has-value">大 1.85</span>
+                    <span class="value-tag positive">+3%</span>
+                </div>
+                <div class="odds-preview-item">
+                    <span class="odds-preview-type">让球</span>
+                    <span class="odds-preview-best no-value">—</span>
+                    <span class="value-tag neutral">无价值</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <nav class="footer-nav">
+        <div class="nav-item active">
+            <div class="nav-icon">🏠</div>
+            <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-item" onclick="location.href='match-detail.html'">
+            <div class="nav-icon">📅</div>
+            <span class="nav-label">比赛</span>
+        </div>
+        <div class="nav-item" onclick="location.href='combo.html'">
+            <div class="nav-icon">📊</div>
+            <span class="nav-label">组合</span>
+        </div>
+        <div class="nav-item" onclick="location.href='tracker.html'">
+            <div class="nav-icon">📈</div>
+            <span class="nav-label">追踪</span>
+        </div>
+    </nav>
+    
+    <script>
+        function switchLeague(tab) {
+            document.querySelectorAll('.league-tab').forEach(t => t.classList.remove('active'));
+            tab.classList.add('active');
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,540 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KickBet - 升级会员</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #08090a;
+            --bg-card: #121314;
+            --bg-hover: #1a1b1c;
+            --bg-input: #0d0e0f;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b8b;
+            --text-muted: #5a5a5a;
+            --border: #2a2b2c;
+            --border-light: #3a3b3c;
+            --accent-success: #00d4aa;
+            --accent-warning: #ff6b6b;
+            --accent-neutral: #ffa500;
+            --accent-info: #4a90d9;
+            --accent-purple: #8b5cf6;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            max-width: 420px;
+            margin: 0 auto;
+            padding-bottom: 40px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+        }
+        
+        .back-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            margin-right: 12px;
+        }
+        
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        /* Hero Section */
+        .hero {
+            padding: 24px 16px;
+            text-align: center;
+        }
+        
+        .hero-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+        
+        .hero-title {
+            font-size: 24px;
+            font-weight: 700;
+            margin-bottom: 8px;
+        }
+        
+        .hero-desc {
+            font-size: 14px;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        /* Pricing Card */
+        .pricing-section {
+            margin: 16px;
+        }
+        
+        .pricing-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 20px;
+            margin-bottom: 16px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .pricing-card.premium {
+            border-color: var(--accent-purple);
+            background: linear-gradient(135deg, var(--bg-card) 0%, rgba(139,92,246,0.1) 100%);
+        }
+        
+        .pricing-badge {
+            position: absolute;
+            top: 0;
+            right: 0;
+            background: var(--accent-purple);
+            color: var(--bg-primary);
+            font-size: 11px;
+            padding: 6px 12px;
+            border-radius: 0 var(--radius-lg) 0 var(--radius-md);
+        }
+        
+        .pricing-header {
+            margin-bottom: 16px;
+        }
+        
+        .pricing-tier {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .pricing-subtitle {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .pricing-price {
+            display: flex;
+            align-items: baseline;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .price-currency {
+            font-size: 20px;
+            font-weight: 600;
+        }
+        
+        .price-value {
+            font-size: 36px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+        
+        .price-period {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+        
+        /* Features List */
+        .features-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-size: 14px;
+        }
+        
+        .feature-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: var(--accent-success);
+            color: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .feature-icon.disabled {
+            background: var(--bg-hover);
+            color: var(--text-muted);
+        }
+        
+        .feature-text {
+            color: var(--text-primary);
+        }
+        
+        .feature-text.disabled {
+            color: var(--text-muted);
+        }
+        
+        /* Comparison Table */
+        .comparison-section {
+            margin: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .comparison-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+        }
+        
+        .comparison-table {
+            width: 100%;
+        }
+        
+        .comparison-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .comparison-row:last-child {
+            border-bottom: none;
+        }
+        
+        .comparison-feature {
+            flex: 1;
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+        
+        .comparison-free, .comparison-premium {
+            width: 60px;
+            text-align: center;
+            font-size: 12px;
+        }
+        
+        .comparison-check {
+            color: var(--accent-success);
+        }
+        
+        .comparison-x {
+            color: var(--text-muted);
+        }
+        
+        .comparison-limited {
+            color: var(--accent-info);
+            font-size: 11px;
+        }
+        
+        /* Subscribe Button */
+        .subscribe-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: calc(100% - 32px);
+            margin: 8px 16px 16px;
+            padding: 16px;
+            background: var(--accent-purple);
+            color: var(--bg-primary);
+            border-radius: var(--radius-lg);
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: opacity 0.2s;
+        }
+        
+        .subscribe-btn:hover {
+            opacity: 0.9;
+        }
+        
+        /* Terms */
+        .terms-section {
+            margin: 16px;
+            text-align: center;
+        }
+        
+        .terms-text {
+            font-size: 12px;
+            color: var(--text-muted);
+            line-height: 1.6;
+        }
+        
+        .terms-link {
+            color: var(--accent-info);
+            cursor: pointer;
+        }
+        
+        /* Guarantee Badge */
+        .guarantee-section {
+            margin: 16px;
+            background: linear-gradient(135deg, rgba(0,212,170,0.1) 0%, rgba(0,212,170,0.05) 100%);
+            border: 1px solid rgba(0,212,170,0.3);
+            border-radius: var(--radius-md);
+            padding: 16px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .guarantee-icon {
+            font-size: 24px;
+        }
+        
+        .guarantee-text {
+            font-size: 13px;
+            color: var(--accent-success);
+        }
+        
+        .guarantee-desc {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        /* Footer */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-success);
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="back-btn" onclick="location.href='index.html'">←</div>
+        <span class="header-title">升级会员</span>
+    </header>
+    
+    <!-- Hero -->
+    <div class="hero">
+        <div class="hero-icon">⭐</div>
+        <div class="hero-title">解锁完整功能</div>
+        <div class="hero-desc">升级会员，获得无限预测分析、智能组合建议和完整投注追踪</div>
+    </div>
+    
+    <!-- Pricing -->
+    <div class="pricing-section">
+        <div class="pricing-card">
+            <div class="pricing-header">
+                <div class="pricing-tier">免费版</div>
+                <div class="pricing-subtitle">基础体验</div>
+            </div>
+            <div class="pricing-price">
+                <span class="price-currency">¥</span>
+                <span class="price-value">0</span>
+                <span class="price-period">永久免费</span>
+            </div>
+            <div class="features-list">
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">每日3场L2分析</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">首页L4推荐</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon disabled">-</span>
+                    <span class="feature-text disabled">L3进阶分析</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon disabled">-</span>
+                    <span class="feature-text disabled">组合投注建议</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon disabled">-</span>
+                    <span class="feature-text disabled">投注追踪系统</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="pricing-card premium">
+            <div class="pricing-badge">推荐</div>
+            <div class="pricing-header">
+                <div class="pricing-tier">会员版</div>
+                <div class="pricing-subtitle">完整功能解锁</div>
+            </div>
+            <div class="pricing-price">
+                <span class="price-currency">¥</span>
+                <span class="price-value">99</span>
+                <span class="price-period">/月</span>
+            </div>
+            <div class="features-list">
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">无限查看所有预测</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">L3进阶分析（完整Kelly+风险提示）</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">智能组合投注建议</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">完整投注追踪系统</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">赔率变动AI分析</span>
+                </div>
+                <div class="feature-item">
+                    <span class="feature-icon">✓</span>
+                    <span class="feature-text">教育中心全部课程</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Comparison Table -->
+    <div class="comparison-section">
+        <div class="comparison-title">功能对比</div>
+        <div class="comparison-table">
+            <div class="comparison-row">
+                <span class="comparison-feature">每日预测查看</span>
+                <span class="comparison-free"><span class="comparison-limited">3场</span></span>
+                <span class="comparison-premium"><span class="comparison-check">∞</span></span>
+            </div>
+            <div class="comparison-row">
+                <span class="comparison-feature">L2基础分析</span>
+                <span class="comparison-free"><span class="comparison-check">✓</span></span>
+                <span class="comparison-premium"><span class="comparison-check">✓</span></span>
+            </div>
+            <div class="comparison-row">
+                <span class="comparison-feature">L3进阶分析</span>
+                <span class="comparison-free"><span class="comparison-x">✗</span></span>
+                <span class="comparison-premium"><span class="comparison-check">✓</span></span>
+            </div>
+            <div class="comparison-row">
+                <span class="comparison-feature">组合投注建议</span>
+                <span class="comparison-free"><span class="comparison-x">✗</span></span>
+                <span class="comparison-premium"><span class="comparison-check">✓</span></span>
+            </div>
+            <div class="comparison-row">
+                <span class="comparison-feature">投注追踪</span>
+                <span class="comparison-free"><span class="comparison-limited">基础</span></span>
+                <span class="comparison-premium"><span class="comparison-check">完整</span></span>
+            </div>
+            <div class="comparison-row">
+                <span class="comparison-feature">赔率变动分析</span>
+                <span class="comparison-free"><span class="comparison-x">✗</span></span>
+                <span class="comparison-premium"><span class="comparison-check">✓</span></span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Guarantee -->
+    <div class="guarantee-section">
+        <div class="guarantee-icon">🛡️</div>
+        <div>
+            <div class="guarantee-text">7天无理由退款</div>
+            <div class="guarantee-desc">不满意随时退款，无任何风险</div>
+        </div>
+    </div>
+    
+    <!-- Subscribe Button -->
+    <button class="subscribe-btn" onclick="alert('开通会员')">
+        <span>立即开通 ¥99/月</span>
+    </button>
+    
+    <!-- Terms -->
+    <div class="terms-section">
+        <div class="terms-text">
+            订阅即表示同意 <span class="terms-link">服务条款</span> 和 <span class="terms-link">隐私政策</span><br>
+            本产品仅提供分析建议，不提供实际投注服务
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <nav class="footer-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <div class="nav-icon">🏠</div>
+            <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-item" onclick="location.href='match-detail.html'">
+            <div class="nav-icon">📅</div>
+            <span class="nav-label">比赛</span>
+        </div>
+        <div class="nav-item" onclick="location.href='combo.html'">
+            <div class="nav-icon">📊</div>
+            <span class="nav-label">组合</span>
+        </div>
+        <div class="nav-item" onclick="location.href='tracker.html'">
+            <div class="nav-icon">📈</div>
+            <span class="nav-label">追踪</span>
+        </div>
+    </nav>
+</body>
+</html>

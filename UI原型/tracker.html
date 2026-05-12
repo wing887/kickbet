@@ -1,0 +1,646 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KickBet - 投注追踪</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        :root {
+            --bg-primary: #08090a;
+            --bg-card: #121314;
+            --bg-hover: #1a1b1c;
+            --bg-input: #0d0e0f;
+            --text-primary: #ffffff;
+            --text-secondary: #8b8b8b;
+            --text-muted: #5a5a5a;
+            --border: #2a2b2c;
+            --border-light: #3a3b3c;
+            --accent-success: #00d4aa;
+            --accent-warning: #ff6b6b;
+            --accent-neutral: #ffa500;
+            --accent-info: #4a90d9;
+            --accent-purple: #8b5cf6;
+            --font-main: 'Inter', -apple-system, sans-serif;
+            --font-mono: 'Roboto Mono', monospace;
+            --radius-sm: 4px;
+            --radius-md: 8px;
+            --radius-lg: 12px;
+        }
+        
+        body {
+            font-family: var(--font-main);
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            max-width: 420px;
+            margin: 0 auto;
+            padding-bottom: 80px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 16px;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            background: var(--bg-primary);
+            z-index: 100;
+        }
+        
+        .header-title {
+            font-size: 16px;
+            font-weight: 600;
+        }
+        
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .btn-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: var(--radius-md);
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-secondary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+        
+        /* Stats Overview */
+        .stats-card {
+            margin: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .stats-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+        
+        .stats-period {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .stats-filter {
+            font-size: 12px;
+            color: var(--text-secondary);
+            background: var(--bg-hover);
+            padding: 4px 12px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+        
+        .stat-value.positive {
+            color: var(--accent-success);
+        }
+        
+        .stat-value.negative {
+            color: var(--accent-warning);
+        }
+        
+        .stat-value.neutral {
+            color: var(--text-primary);
+        }
+        
+        .stat-label {
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .stat-subvalue {
+            font-size: 11px;
+            color: var(--text-secondary);
+        }
+        
+        /* ROI Chart Placeholder */
+        .chart-section {
+            margin: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .chart-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .chart-placeholder {
+            height: 120px;
+            background: var(--bg-hover);
+            border-radius: var(--radius-md);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 13px;
+        }
+        
+        /* Mini Chart Bars */
+        .mini-chart {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-between;
+            height: 80px;
+            padding: 8px 0;
+        }
+        
+        .chart-bar {
+            width: 20px;
+            background: var(--accent-success);
+            border-radius: 2px 2px 0 0;
+            min-height: 4px;
+        }
+        
+        .chart-bar.negative {
+            background: var(--accent-warning);
+        }
+        
+        .chart-labels {
+            display: flex;
+            justify-content: space-between;
+            font-size: 10px;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+        
+        /* Records List */
+        .records-section {
+            margin: 16px;
+        }
+        
+        .records-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .records-title {
+            font-size: 14px;
+            font-weight: 600;
+        }
+        
+        .records-tabs {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .record-tab {
+            font-size: 12px;
+            padding: 6px 12px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-sm);
+            color: var(--text-secondary);
+            cursor: pointer;
+        }
+        
+        .record-tab.active {
+            background: var(--accent-info);
+            color: var(--bg-primary);
+            border-color: var(--accent-info);
+        }
+        
+        /* Record Card */
+        .record-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-md);
+            padding: 12px;
+            margin-bottom: 8px;
+        }
+        
+        .record-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .record-match {
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        .record-date {
+            font-size: 11px;
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+        }
+        
+        .record-body {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .record-details {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+        
+        .record-bet-type {
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+        
+        .record-odds {
+            font-size: 12px;
+            font-family: var(--font-mono);
+            color: var(--text-muted);
+        }
+        
+        .record-result {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+        }
+        
+        .record-profit {
+            font-size: 16px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+        
+        .record-profit.positive {
+            color: var(--accent-success);
+        }
+        
+        .record-profit.negative {
+            color: var(--accent-warning);
+        }
+        
+        .record-status {
+            font-size: 11px;
+            padding: 2px 8px;
+            border-radius: var(--radius-sm);
+        }
+        
+        .record-status.win {
+            background: rgba(0,212,170,0.2);
+            color: var(--accent-success);
+        }
+        
+        .record-status.loss {
+            background: rgba(255,107,107,0.2);
+            color: var(--accent-warning);
+        }
+        
+        .record-status.pending {
+            background: rgba(74,144,217,0.2);
+            color: var(--accent-info);
+        }
+        
+        /* Add Record Button */
+        .add-record-btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-card);
+            border: 1px dashed var(--border);
+            border-radius: var(--radius-md);
+            color: var(--text-secondary);
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 8px;
+        }
+        
+        .add-record-btn:hover {
+            border-color: var(--accent-info);
+            color: var(--accent-info);
+        }
+        
+        /* Accuracy Panel */
+        .accuracy-section {
+            margin: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: var(--radius-lg);
+            padding: 16px;
+        }
+        
+        .accuracy-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 12px;
+        }
+        
+        .accuracy-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .accuracy-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 8px;
+            padding: 12px;
+            background: var(--bg-hover);
+            border-radius: var(--radius-md);
+        }
+        
+        .accuracy-value {
+            font-size: 20px;
+            font-weight: 700;
+            font-family: var(--font-mono);
+        }
+        
+        .accuracy-label {
+            font-size: 11px;
+            color: var(--text-muted);
+        }
+        
+        .accuracy-sublabel {
+            font-size: 10px;
+            color: var(--text-secondary);
+        }
+        
+        /* Footer */
+        .footer-nav {
+            position: fixed;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 100%;
+            max-width: 420px;
+            background: var(--bg-card);
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-around;
+            padding: 12px 0;
+            z-index: 100;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            color: var(--text-muted);
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--accent-success);
+        }
+        
+        .nav-icon {
+            width: 24px;
+            height: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .nav-label {
+            font-size: 11px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <span class="header-title">投注追踪</span>
+        <div class="header-actions">
+            <div class="btn-icon">📊</div>
+            <div class="btn-icon" onclick="alert('导出数据')">↓</div>
+        </div>
+    </header>
+    
+    <!-- Stats Overview -->
+    <div class="stats-card">
+        <div class="stats-header">
+            <span class="stats-period">本月统计</span>
+            <span class="stats-filter" onclick="alert('切换时间范围')">2026年5月</span>
+        </div>
+        <div class="stats-grid">
+            <div class="stat-item">
+                <span class="stat-value positive">+¥850</span>
+                <span class="stat-label">总盈亏</span>
+                <span class="stat-subvalue">盈利</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value neutral">12</span>
+                <span class="stat-label">总投注</span>
+                <span class="stat-subvalue">¥2000本金</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-value positive">42.5%</span>
+                <span class="stat-label">ROI</span>
+                <span class="stat-subvalue">表现良好</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- ROI Chart -->
+    <div class="chart-section">
+        <div class="chart-title">盈亏趋势</div>
+        <div class="mini-chart">
+            <div class="chart-bar" style="height: 30px;"></div>
+            <div class="chart-bar" style="height: 20px;"></div>
+            <div class="chart-bar negative" style="height: 15px;"></div>
+            <div class="chart-bar" style="height: 45px;"></div>
+            <div class="chart-bar negative" style="height: 10px;"></div>
+            <div class="chart-bar" style="height: 55px;"></div>
+            <div class="chart-bar" style="height: 40px;"></div>
+        </div>
+        <div class="chart-labels">
+            <span>第1周</span>
+            <span>第2周</span>
+            <span>第3周</span>
+            <span>第4周</span>
+        </div>
+    </div>
+    
+    <!-- Accuracy Panel -->
+    <div class="accuracy-section">
+        <div class="accuracy-title">预测准确率</div>
+        <div class="accuracy-grid">
+            <div class="accuracy-item">
+                <span class="accuracy-value" style="color: var(--accent-success);">67%</span>
+                <span class="accuracy-label">总准确率</span>
+                <span class="accuracy-sublabel">8胜/4负</span>
+            </div>
+            <div class="accuracy-item">
+                <span class="accuracy-value" style="color: var(--accent-info);">75%</span>
+                <span class="accuracy-label">高置信度</span>
+                <span class="accuracy-sublabel">置信度>70%</span>
+            </div>
+            <div class="accuracy-item">
+                <span class="accuracy-value" style="color: var(--accent-neutral);">58%</span>
+                <span class="accuracy-label">中置信度</span>
+                <span class="accuracy-sublabel">置信度50-70%</span>
+            </div>
+            <div class="accuracy-item">
+                <span class="accuracy-value" style="color: var(--accent-warning);">30%</span>
+                <span class="accuracy-label">低置信度</span>
+                <span class="accuracy-sublabel">置信度<50%</span>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Records List -->
+    <div class="records-section">
+        <div class="records-header">
+            <span class="records-title">投注记录</span>
+            <div class="records-tabs">
+                <span class="record-tab active">全部</span>
+                <span class="record-tab">胜</span>
+                <span class="record-tab">负</span>
+                <span class="record-tab">待定</span>
+            </div>
+        </div>
+        
+        <div class="record-card">
+            <div class="record-header">
+                <span class="record-match">曼城 vs 布伦特福德</span>
+                <span class="record-date">05-08 21:00</span>
+            </div>
+            <div class="record-body">
+                <div class="record-details">
+                    <span class="record-bet-type">主胜</span>
+                    <span class="record-odds">赔率: 1.42 | 金额: ¥60</span>
+                </div>
+                <div class="record-result">
+                    <span class="record-profit positive">+¥25</span>
+                    <span class="record-status win">胜</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="record-card">
+            <div class="record-header">
+                <span class="record-match">山东泰山 vs 浙江队</span>
+                <span class="record-date">05-07 19:35</span>
+            </div>
+            <div class="record-body">
+                <div class="record-details">
+                    <span class="record-bet-type">主胜</span>
+                    <span class="record-odds">赔率: 1.65 | 金额: ¥40</span>
+                </div>
+                <div class="record-result">
+                    <span class="record-profit positive">+¥26</span>
+                    <span class="record-status win">胜</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="record-card">
+            <div class="record-header">
+                <span class="record-match">川崎前锋 vs 浦和红钻</span>
+                <span class="record-date">05-06 15:00</span>
+            </div>
+            <div class="record-body">
+                <div class="record-details">
+                    <span class="record-bet-type">平局</span>
+                    <span class="record-odds">赔率: 3.20 | 金额: ¥15</span>
+                </div>
+                <div class="record-result">
+                    <span class="record-profit negative">-¥15</span>
+                    <span class="record-status loss">负</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="record-card">
+            <div class="record-header">
+                <span class="record-match">上海申花 vs 河南嵩山</span>
+                <span class="record-date">05-10 19:35</span>
+            </div>
+            <div class="record-body">
+                <div class="record-details">
+                    <span class="record-bet-type">主胜</span>
+                    <span class="record-odds">赔率: 2.10 | 金额: ¥50</span>
+                </div>
+                <div class="record-result">
+                    <span class="record-profit">待定</span>
+                    <span class="record-status pending">待开奖</span>
+                </div>
+            </div>
+        </div>
+        
+        <div class="add-record-btn" onclick="alert('添加投注记录')">
+            <span>+ 添加记录</span>
+        </div>
+    </div>
+    
+    <!-- Footer -->
+    <nav class="footer-nav">
+        <div class="nav-item" onclick="location.href='index.html'">
+            <div class="nav-icon">🏠</div>
+            <span class="nav-label">首页</span>
+        </div>
+        <div class="nav-item" onclick="location.href='match-detail.html'">
+            <div class="nav-icon">📅</div>
+            <span class="nav-label">比赛</span>
+        </div>
+        <div class="nav-item" onclick="location.href='combo.html'">
+            <div class="nav-icon">📊</div>
+            <span class="nav-label">组合</span>
+        </div>
+        <div class="nav-item active">
+            <div class="nav-icon">📈</div>
+            <span class="nav-label">追踪</span>
+        </div>
+    </nav>
+    
+    <script>
+        // Tab switching
+        document.querySelectorAll('.record-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.record-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+            });
+        });
+    </script>
+</body>
+</html>

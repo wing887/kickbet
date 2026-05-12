@@ -1,0 +1,52 @@
+# KickBet 项目统一 gitignore
+
+# === kickbet-core (后端) ===
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+.env
+.venv/
+ENV/
+
+# 测试
+.pytest_cache/
+.coverage
+htmlcov/
+*.cover
+
+# 数据文件 (敏感)
+kickbet-core/data/*.json
+kickbet-core/data/*.db
+kickbet-core/data/*.sqlite
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === kickbet-web (前端) ===
+# Node
+kickbet-web/node_modules/
+kickbet-web/dist/
+kickbet-web/.vite/
+
+# Logs
+*.log
+npm-debug.log*
+
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# 压缩包
+*.7z
+*.zip
+
+# 临时文件
+*.tmp
+*.temp
