@@ -90,6 +90,26 @@ class HandicapPrediction:
 
 
 @dataclass
+class H2HPrediction:
+    """历史交锋预测数据"""
+    total_matches: int
+    home_wins: int  # 主队胜场数 (作为主队)
+    away_wins: int  # 客队胜场数 (作为客队时的胜场)
+    draws: int
+    home_win_rate: float
+    away_win_rate: float
+    draw_rate: float
+    avg_home_goals: float  # 主队交锋场均进球
+    avg_away_goals: float  # 客队交锋场均进球
+    avg_total_goals: float
+    recent_results: List[str]  # 最近交锋结果 ['W','D','L'...]
+    # H2H加权概率 (基于历史交锋)
+    h2h_prob_home: float
+    h2h_prob_draw: float
+    h2h_prob_away: float
+
+
+@dataclass
 class MatchPrediction:
     """比赛预测结果"""
     match_id: str
@@ -112,6 +132,12 @@ class MatchPrediction:
     totals_prediction: TotalsPrediction = None
     # 让球盘预测 (扩展)
     handicap_prediction: HandicapPrediction = None
+    # 历史交锋预测 (新增)
+    h2h_prediction: H2HPrediction = None
+    # 综合预测概率 (融合Poisson + H2H)
+    combined_prob_home: float = 0.0
+    combined_prob_draw: float = 0.0
+    combined_prob_away: float = 0.0
 
 
 @dataclass
@@ -158,7 +184,7 @@ class PoissonPredictor:
     
     def load_stats_from_standings(self, standings: List[Dict]):
         """
-        从积分榜数据加载统计
+        从积分榜数据加载统计 (旧方法，不区分主客场)
         
         Args:
             standings: 积分榜数据列表
@@ -177,6 +203,64 @@ class PoissonPredictor:
             self._team_stats[team['team_id']] = stats
         
         logger.info(f"加载了 {len(self._team_stats)} 个球队的统计数据")
+    
+    def load_stats_from_history_db(self, db_manager, league_code: str = None, 
+                                    season_id: int = None, team_names: List[str] = None):
+        """
+        从历史比赛数据库加载球队统计 (推荐方法)
+        
+        Args:
+            db_manager: HistoryDBManager实例
+            league_code: 联赛代码 (可选，用于筛选)
+            season_id: 赛季ID (可选，指定赛季)
+            team_names: 球队名称列表 (可选，只加载指定球队)
+        
+        Returns:
+            加载的球队数量
+        """
+        from database.history_models import Team
+        
+        session = db_manager.get_session()
+        try:
+            # 查询球队
+            query = session.query(Team)
+            if team_names:
+                # 按名称过滤
+                query = query.filter(Team.name.in_(team_names))
+            
+            teams = query.all()
+            
+            loaded_count = 0
+            for team in teams:
+                # 从历史比赛计算统计
+                stats_dict = db_manager.get_team_stats_from_history(
+                    team.team_id, 
+                    season_id=season_id
+                )
+                
+                if 'error' in stats_dict:
+                    continue
+                
+                # 创建统计对象
+                stats = TeamAttackDefenseStats(
+                    team_id=team.team_id,
+                    team_name=team.name,
+                    home_scored_avg=stats_dict.get('home_scored_avg', 1.5),
+                    home_conceded_avg=stats_dict.get('home_conceded_avg', 1.0),
+                    home_played=stats_dict.get('home_matches', 0),
+                    away_scored_avg=stats_dict.get('away_scored_avg', 1.2),
+                    away_conceded_avg=stats_dict.get('away_conceded_avg', 1.3),
+                    away_played=stats_dict.get('away_matches', 0)
+                )
+                
+                self._team_stats[team.team_id] = stats
+                loaded_count += 1
+            
+            logger.info(f"[HistoryDB] 加载了 {loaded_count} 个球队的真实主客场统计")
+            return loaded_count
+            
+        finally:
+            session.close()
     
     def calculate_expected_goals(self, home_team_id: int, away_team_id: int) -> Tuple[float, float]:
         """
@@ -308,6 +392,111 @@ class PoissonPredictor:
             score_distribution={k: round(v, 4) for k, v in score_probs.items()},
             totals_prediction=totals_pred,
             handicap_prediction=handicap_pred
+        )
+    
+    def predict_match_with_h2h(self, match_id: str, home_team: str, away_team: str,
+                                home_team_id: int, away_team_id: int,
+                                h2h_stats: Dict, h2h_weight: float = 0.25,
+                                h2h_threshold: int = 5) -> MatchPrediction:
+        """
+        预测单场比赛 (包含历史交锋数据融合)
+        
+        改进版策略 (基于回测验证):
+        - λ始终使用主客场综合计算 (不替换)
+        - H2H作为可选融合因子
+        - 仅当交锋场次 >= threshold 时启用融合
+        - 自适应权重: 样本越大权重越高
+        
+        Args:
+            match_id: 比赛ID
+            home_team: 主队名称
+            away_team: 客队名称
+            home_team_id: 主队ID
+            away_team_id: 客队ID
+            h2h_stats: 历史交锋统计数据 (from get_head_to_head_stats)
+            h2h_weight: H2H基础权重 (0-0.5, 默认0.25表示25%权重)
+            h2h_threshold: H2H启用阈值 (默认5场，小于此不融合)
+            
+        Returns:
+            MatchPrediction预测结果 (包含融合后的概率)
+            
+        回测验证结果:
+        - threshold=1时H2H准确率36.1% (低于Poisson 48.2%)
+        - threshold=3时无触发 (样本不足)
+        - 建议: threshold>=5才有足够样本稳定性
+        """
+        # 先执行基础预测 (λ使用主客场综合)
+        base_pred = self.predict_match(match_id, home_team, away_team, home_team_id, away_team_id)
+        
+        total_matches = h2h_stats.get('total_matches', 0)
+        
+        # 如果无H2H数据或场次不足，返回基础预测
+        if total_matches < h2h_threshold:
+            logger.info(f"[H2H跳过] 交锋{total_matches}场 < 阈值{h2h_threshold}场，仅用Poisson")
+            return base_pred
+        
+        # 自适应权重: 样本越大权重越高
+        # 5场: 15%, 10场: 25%, 15场: 35%, 20+场: 45%
+        adaptive_weight = min(0.45, h2h_weight + (total_matches - h2h_threshold) * 0.02)
+        
+        # 计算H2H概率 (从历史交锋计算)
+        h2h_prob_home = h2h_stats['team_a_win_rate']
+        h2h_prob_draw = h2h_stats['draw_rate']
+        h2h_prob_away = h2h_stats['team_b_win_rate']
+        
+        # 创建H2H预测对象
+        home_as_home_wins = h2h_stats.get('team_a_as_home_wins', 0)
+        home_as_away_wins = h2h_stats.get('team_a_as_away_wins', 0)
+        
+        h2h_pred = H2HPrediction(
+            total_matches=total_matches,
+            home_wins=home_as_home_wins,
+            away_wins=home_as_away_wins,
+            draws=h2h_stats['draws'],
+            home_win_rate=h2h_prob_home,
+            away_win_rate=h2h_prob_away,
+            draw_rate=h2h_prob_draw,
+            avg_home_goals=h2h_stats['avg_team_a_goals'],
+            avg_away_goals=h2h_stats['avg_team_b_goals'],
+            avg_total_goals=h2h_stats['avg_total_goals'],
+            recent_results=h2h_stats['recent_results'],
+            h2h_prob_home=round(h2h_prob_home, 4),
+            h2h_prob_draw=round(h2h_prob_draw, 4),
+            h2h_prob_away=round(h2h_prob_away, 4)
+        )
+        
+        # 融合概率: weighted average of Poisson + H2H
+        # combined = (1 - weight) * poisson + weight * h2h
+        poisson_weight = 1 - adaptive_weight
+        
+        combined_home = round(poisson_weight * base_pred.prob_home + adaptive_weight * h2h_prob_home, 4)
+        combined_draw = round(poisson_weight * base_pred.prob_draw + adaptive_weight * h2h_prob_draw, 4)
+        combined_away = round(poisson_weight * base_pred.prob_away + adaptive_weight * h2h_prob_away, 4)
+        
+        # 更新预测结果
+        logger.info(f"[H2H融合] Poisson: H={base_pred.prob_home:.1%} D={base_pred.prob_draw:.1%} A={base_pred.prob_away:.1%}")
+        logger.info(f"[H2H融合] H2H({total_matches}场): H={h2h_prob_home:.1%} D={h2h_prob_draw:.1%} A={h2h_prob_away:.1%}")
+        logger.info(f"[H2H融合] 综合({adaptive_weight:.0%}权重): H={combined_home:.1%} D={combined_draw:.1%} A={combined_away:.1%}")
+        
+        # 返回融合预测
+        return MatchPrediction(
+            match_id=match_id,
+            home_team=home_team,
+            away_team=away_team,
+            prob_home=base_pred.prob_home,
+            prob_draw=base_pred.prob_draw,
+            prob_away=base_pred.prob_away,
+            prediction=self._calibrate_result(combined_home, combined_draw, combined_away),
+            expected_home_goals=base_pred.expected_home_goals,
+            expected_away_goals=base_pred.expected_away_goals,
+            most_likely_score=base_pred.most_likely_score,
+            score_distribution=base_pred.score_distribution,
+            totals_prediction=base_pred.totals_prediction,
+            handicap_prediction=base_pred.handicap_prediction,
+            h2h_prediction=h2h_pred,
+            combined_prob_home=combined_home,
+            combined_prob_draw=combined_draw,
+            combined_prob_away=combined_away
         )
     
     def _calibrate_result(self, prob_h: float, prob_d: float, prob_a: float) -> str:

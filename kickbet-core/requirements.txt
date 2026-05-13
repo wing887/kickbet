@@ -3,3 +3,7 @@ flask>=2.3.0
 flask-cors>=4.0.0
 requests>=2.28.0
 pyyaml>=6.0
+
+# 预计算架构依赖
+sqlalchemy>=2.0.0
+apscheduler>=3.10.0
