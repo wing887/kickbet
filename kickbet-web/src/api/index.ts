@@ -1,7 +1,7 @@
 import axios from 'axios'
 
 // API 基础配置
-const API_BASE_URL = 'http://localhost:5000/api'
+const API_BASE_URL = 'http://localhost:5001/api'
 
 const apiClient = axios.create({
   baseURL: API_BASE_URL,
@@ -236,6 +236,157 @@ export const admin = {
     predictions: { total: number; correct: number; pending: number; accuracy: number }
     api: { version: string; endpoints: number }
   }> => apiClient.get('/admin/stats')
+}
+
+// ==================== 缓存API (v2.0) ====================
+
+export interface CachedMatch {
+  match_id: string
+  home_team: string
+  home_team_id: number
+  away_team: string
+  away_team_id: number
+  league: string
+  league_name: string
+  match_date: string
+  status: string
+  has_prediction: boolean
+  prediction?: CachedPrediction
+}
+
+export interface CachedPrediction {
+  match_id: string
+  prob_home: number
+  prob_draw: number
+  prob_away: number
+  prediction: string  // H/D/A
+  expected_home_goals: number
+  expected_away_goals: number
+  most_likely_score: string
+  combined_prob_home?: number
+  combined_prob_draw?: number
+  combined_prob_away?: number
+  h2h_prediction?: H2HPredictionData
+}
+
+export interface H2HPredictionData {
+  total_matches: number
+  home_win_rate: number
+  away_win_rate: number
+  draw_rate: number
+  avg_total_goals: number
+  h2h_prob_home: number
+  h2h_prob_draw: number
+  h2h_prob_away: number
+}
+
+export interface CachedMatchesResponse {
+  success: boolean
+  matches: CachedMatch[]
+  total: number
+  cached_count: number
+  timestamp: string
+}
+
+export interface CachedMatchDetailResponse {
+  success: boolean
+  match: CachedMatch
+  prediction: CachedPrediction | null
+  has_prediction: boolean
+  odds_history: OddsHistoryItem[]
+  odds_change_detected: boolean
+}
+
+export interface OddsHistoryItem {
+  odds_id: string
+  match_id: string
+  bookmaker: string
+  home_odds: number
+  draw_odds: number
+  away_odds: number
+  collected_at: string
+  change_detected: boolean
+}
+
+export interface LivePredictionParams {
+  match_id: string
+  home_team: string
+  away_team: string
+  home_team_id: number
+  away_team_id: number
+  h2h_weight?: number  // 0-0.5, default 0.25
+}
+
+export interface LivePredictionResponse {
+  success: boolean
+  match_id: string
+  home_team: string
+  away_team: string
+  poisson_prediction: {
+    prob_home: number
+    prob_draw: number
+    prob_away: number
+    expected_home_goals: number
+    expected_away_goals: number
+    most_likely_score: string
+  }
+  h2h_stats: {
+    total_matches: number
+    home_wins: number
+    away_wins: number
+    draws: number
+    home_win_rate: number
+    away_win_rate: number
+    draw_rate: number
+    avg_total_goals: number
+    recent_results: string[]
+  }
+  combined_prediction: {
+    prob_home: number
+    prob_draw: number
+    prob_away: number
+    prediction: string
+    h2h_weight: number
+  }
+  has_h2h_data: boolean
+}
+
+export interface BatchPredictionsResponse {
+  success: boolean
+  predictions: Record<string, CachedPrediction | null>
+  found_count: number
+  missing_count: number
+  missing: string[]
+}
+
+export const cache = {
+  // 获取比赛列表 (带预测缓存)
+  matches: (hours = 72, league?: string): Promise<CachedMatchesResponse> =>
+    apiClient.get('/cache/matches', { params: { hours, league } }),
+  
+  // 获取单场比赛详情
+  matchDetail: (matchId: string): Promise<CachedMatchDetailResponse> =>
+    apiClient.get(`/cache/matches/${matchId}`),
+  
+  // 获取预测数据
+  prediction: (matchId: string, full = false): Promise<{ success: boolean; match_id: string; prediction: CachedPrediction }> =>
+    apiClient.get(`/cache/predictions/${matchId}`, { params: { full } }),
+  
+  // 实时预测 (含H2H)
+  predictionLive: (params: LivePredictionParams): Promise<LivePredictionResponse> =>
+    apiClient.post('/cache/predictions/live', params),
+  
+  // 批量获取预测
+  predictionsBatch: (matchIds: string[]): Promise<BatchPredictionsResponse> =>
+    apiClient.post('/cache/predictions/batch', { match_ids: matchIds }),
+  
+  // 获取预测历史版本
+  predictionHistory: (matchId: string, limit = 5): Promise<{ success: boolean; history: CachedPrediction[] }> =>
+    apiClient.get(`/cache/predictions/${matchId}/history`, { params: { limit } }),
+  
+  // 获取赔率历史
+  odds: (matchId: string, bookmaker?: string): Promise<{ success: boolean; odds: OddsHistoryItem }> =>
+    apiClient.get(`/cache/odds/${matchId}`, { params: { bookmaker } })
 }
 
 export default apiClient

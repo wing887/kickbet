@@ -190,114 +190,301 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
-import { useRoute } from 'vue-router'
+import { ref, computed, onMounted } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
+import { cache } from '../../api'
+import type { CachedMatchDetailResponse, CachedPrediction } from '../../api'
 
 const route = useRoute()
-const matchId = computed(() => route.params.id || '1')
+const router = useRouter()
+const matchId = computed(() => route.params.id as string)
 
+const loading = ref(true)
+const error = ref('')
 const playType = ref<'1x2' | 'ou' | 'ah'>('1x2')
 const selectedPlan = ref(0)
-const oddsUpdateTime = ref('18:30')
 
-// Match Info
-const match = ref({
-  id: matchId.value,
-  league: '英超',
-  round: 35,
-  homeTeam: { name: '曼城', short: 'MC' },
-  awayTeam: { name: '布伦特福德', short: 'BF' },
-  time: '今晚 21:00',
-  stadium: 'Etihad Stadium'
+// API Data
+const matchData = ref<CachedMatchDetailResponse | null>(null)
+
+// Match Info (from API)
+const match = computed(() => {
+  if (!matchData.value?.match) {
+    return {
+      id: matchId.value,
+      league: '--',
+      round: '--',
+      homeTeam: { name: '--', short: '--' },
+      awayTeam: { name: '--', short: '--' },
+      time: '--',
+      stadium: '待获取'
+    }
+  }
+  const m = matchData.value.match
+  return {
+    id: m.match_id,
+    league: m.league_name || m.league,
+    round: '--',
+    homeTeam: { name: m.home_team, short: m.home_team.substring(0, 2).toUpperCase() },
+    awayTeam: { name: m.away_team, short: m.away_team.substring(0, 2).toUpperCase() },
+    time: formatTime(m.match_date),
+    stadium: '待获取'
+  }
 })
 
-// 1X2 Odds
-const odds1x2 = ref([
-  { platform: 'Bet365', home: 1.42, draw: 4.50, away: 8.00, homeBest: true, drawBest: false, awayBest: false },
-  { platform: 'Sbobet', home: 1.40, draw: 4.40, away: 7.80, homeBest: false, drawBest: false, awayBest: false },
-  { platform: 'Pinnacle', home: 1.43, draw: 4.55, away: 8.20, homeBest: false, drawBest: true, awayBest: true }
-])
+// Prediction (from API)
+const prediction = computed(() => matchData.value?.prediction)
 
-const recommendation1x2 = ref({
-  title: '推荐：Bet365 主胜',
-  detail: '最优赔率 1.42，模型概率 75%，隐含概率 70%，价值优势 +5%'
+// Odds History (from API)
+const oddsHistory = computed(() => matchData.value?.odds_history || [])
+
+// Latest Odds
+const latestOdds = computed(() => {
+  if (oddsHistory.value.length === 0) return null
+  return oddsHistory.value[0]
 })
 
-// Over/Under Odds
+// Update Time
+const oddsUpdateTime = computed(() => {
+  if (!latestOdds.value) return '--'
+  return formatTime(latestOdds.value.collected_at)
+})
+
+// 1X2 Odds (from API odds_history)
+const odds1x2 = computed(() => {
+  if (oddsHistory.value.length === 0) {
+    return [{ platform: '待获取', home: '--', draw: '--', away: '--', homeBest: false, drawBest: false, awayBest: false }]
+  }
+  
+  // 汇总各平台赔率
+  const platformOdds: Record<string, any> = {}
+  oddsHistory.value.forEach(o => {
+    if (!platformOdds[o.bookmaker]) {
+      platformOdds[o.bookmaker] = {
+        platform: o.bookmaker,
+        home: o.home_odds,
+        draw: o.draw_odds,
+        away: o.away_odds
+      }
+    }
+  })
+  
+  const result = Object.values(platformOdds)
+  
+  // 标记最优赔率
+  if (result.length > 0) {
+    const maxHome = Math.max(...result.map(o => o.home))
+    const maxDraw = Math.max(...result.map(o => o.draw))
+    const maxAway = Math.max(...result.map(o => o.away))
+    
+    result.forEach(o => {
+      o.homeBest = o.home === maxHome
+      o.drawBest = o.draw === maxDraw
+      o.awayBest = o.away === maxAway
+    })
+  }
+  
+  return result
+})
+
+// Recommendation 1x2 (from prediction)
+const recommendation1x2 = computed(() => {
+  if (!prediction.value) return null
+  
+  const pred = prediction.value
+  const labelMap: Record<string, string> = { 'H': '主胜', 'D': '平局', 'A': '客胜' }
+  const probMap: Record<string, number> = {
+    'H': pred.combined_prob_home ?? pred.prob_home,
+    'D': pred.combined_prob_draw ?? pred.prob_draw,
+    'A': pred.combined_prob_away ?? pred.prob_away
+  }
+  
+  const bestOutcome = pred.prediction
+  const bestProb = probMap[bestOutcome]
+  const marketProb = latestOdds.value ? 1 / (latestOdds.value.home_odds || 1) : 0.33
+  const value = bestProb - marketProb
+  
+  return {
+    title: `推荐：${labelMap[bestOutcome]}`,
+    detail: `模型概率 ${Math.round(bestProb * 100)}%，市场隐含概率 ${Math.round(marketProb * 100)}%，价值 ${value > 0.05 ? '+' + Math.round(value * 100) + '%' : '无明显优势'}`
+  }
+})
+
+// Analysis (from prediction)
+const analysis = computed(() => {
+  if (!prediction.value) {
+    return {
+      homeGoalsAvg: '--',
+      homeConcedeAvg: '--',
+      awayGoalsAvg: '--',
+      awayConcedeAvg: '--',
+      mostLikelyScore: '--',
+      mostLikelyProb: '--',
+      kellyAdvice: '待分析',
+      confidence: 0,
+      confidenceLevel: '--',
+      riskWarning: '请等待数据加载',
+      h2hInfo: null
+    }
+  }
+  
+  const pred = prediction.value
+  const maxProb = Math.max(
+    pred.combined_prob_home ?? pred.prob_home,
+    pred.combined_prob_draw ?? pred.prob_draw,
+    pred.combined_prob_away ?? pred.prob_away
+  )
+  
+  let confidenceLevel = '低置信'
+  if (maxProb > 0.6) confidenceLevel = '高置信'
+  else if (maxProb > 0.5) confidenceLevel = '中等置信'
+  
+  return {
+    homeGoalsAvg: pred.expected_home_goals.toFixed(2),
+    homeConcedeAvg: '--',
+    awayGoalsAvg: pred.expected_away_goals.toFixed(2),
+    awayConcedeAvg: '--',
+    mostLikelyScore: pred.most_likely_score,
+    mostLikelyProb: '--',
+    kellyAdvice: `预期进球 ${pred.expected_home_goals} vs ${pred.expected_away_goals}`,
+    confidence: Math.round(maxProb * 100),
+    confidenceLevel,
+    riskWarning: '建议结合H2H历史交锋数据综合判断',
+    h2hInfo: pred.h2h_prediction
+  }
+})
+
+// Mock OU and AH for now (need more API data)
 const oddsOU = ref([
   { platform: 'Bet365', over: 1.85, under: 1.95, line: 2.5, overBest: false, underBest: false },
   { platform: 'Sbobet', over: 1.80, under: 2.00, line: 2.5, overBest: false, underBest: true },
   { platform: 'Pinnacle', over: 1.82, under: 1.98, line: 2.5, overBest: false, underBest: false }
 ])
 
-const recommendationOU = ref({
-  title: '推荐：Sbobet 小2.5球',
-  detail: '最优赔率 2.00，模型概率 55%，隐含概率 50%，价值优势 +5%'
+const recommendationOU = computed(() => {
+  if (!prediction.value) return null
+  
+  // 基于预期进球判断大小球倾向
+  const totalGoals = prediction.value.expected_home_goals + prediction.value.expected_away_goals
+  
+  if (totalGoals > 2.5) {
+    return { title: '推荐：大2.5球', detail: `预期总进球 ${totalGoals.toFixed(1)}，倾向大球` }
+  } else {
+    return { title: '推荐：小2.5球', detail: `预期总进球 ${totalGoals.toFixed(1)}，倾向小球` }
+  }
 })
 
-// Asian Handicap Odds
 const oddsAH = ref([
   { platform: 'Bet365', home: 1.75, away: 2.10, handicap: -1.5, homeBest: false, awayBest: false },
   { platform: 'Sbobet', home: 1.80, away: 2.05, handicap: -1.5, homeBest: true, awayBest: false },
   { platform: 'Pinnacle', home: 1.78, away: 2.15, handicap: -1.5, homeBest: false, awayBest: true }
 ])
 
-const recommendationAH = ref(null) // No value
-
-// Bet Plans
-const betPlans = ref([
-  {
-    name: '方案A · 分散保守',
-    risk: 20,
-    riskLevel: 'low',
-    bets: [
-      { platform: 'Bet365', type: '胜平负', target: '主胜', amount: 60, odds: 1.42, expectedReturn: 25 },
-      { platform: 'Sbobet', type: '大小球', target: '小2.5', amount: 40, odds: 2.00, expectedReturn: 40 }
-    ],
-    totalStake: 100,
-    expectedROI: 65,
-    winRateLabel: '胜率估算',
-    winRate: 75
-  },
-  {
-    name: '方案B · 单注平衡',
-    risk: 40,
-    riskLevel: 'medium',
-    bets: [
-      { platform: 'Bet365', type: '胜平负', target: '主胜', amount: 100, odds: 1.42, expectedReturn: 42 }
-    ],
-    totalStake: 100,
-    expectedROI: 42,
-    winRateLabel: 'Kelly比例',
-    winRate: 10
-  },
-  {
-    name: '方案C · 串关激进',
-    risk: 60,
-    riskLevel: 'high',
-    bets: [
-      { platform: '串关2串1', type: '组合', target: '主胜 + 小2.5', amount: 50, odds: 2.84, expectedReturn: 92 }
-    ],
-    totalStake: 50,
-    expectedROI: 84,
-    winRateLabel: '胜率估算',
-    winRate: 35
+const recommendationAH = computed(() => {
+  if (!prediction.value) return null
+  
+  const pred = prediction.value
+  const homeProb = pred.combined_prob_home ?? pred.prob_home
+  
+  if (homeProb > 0.65) {
+    return { title: '推荐：主队让1.5球', detail: `主胜概率 ${Math.round(homeProb * 100)}%，可尝试让球盘` }
   }
-])
-
-// Analysis
-const analysis = ref({
-  homeGoalsAvg: 2.1,
-  homeConcedeAvg: 0.8,
-  awayGoalsAvg: 1.2,
-  awayConcedeAvg: 1.5,
-  mostLikelyScore: '2-0',
-  mostLikelyProb: 18,
-  kellyAdvice: '主胜投注比例 6%',
-  confidence: 75,
-  confidenceLevel: '高置信',
-  riskWarning: '赔率变动需关注临场变化'
+  return null
 })
+
+// Bet Plans (computed from prediction)
+const betPlans = computed(() => {
+  if (!prediction.value || !latestOdds.value) {
+    return [{
+      name: '方案A · 待数据',
+      risk: 0,
+      riskLevel: 'low',
+      bets: [],
+      totalStake: 0,
+      expectedROI: 0,
+      winRateLabel: '加载中',
+      winRate: 0
+    }]
+  }
+  
+  const pred = prediction.value
+  const odds = latestOdds.value
+  const maxProb = Math.max(
+    pred.combined_prob_home ?? pred.prob_home,
+    pred.combined_prob_draw ?? pred.prob_draw,
+    pred.combined_prob_away ?? pred.prob_away
+  )
+  const bestOutcome = pred.prediction
+  
+  const labelMap: Record<string, string> = { 'H': '主胜', 'D': '平局', 'A': '客胜' }
+  const oddsMap: Record<string, number> = { 'H': odds.home_odds, 'D': odds.draw_odds, 'A': odds.away_odds }
+  
+  return [
+    {
+      name: '方案A · 分散保守',
+      risk: 20,
+      riskLevel: 'low',
+      bets: [
+        { platform: odds.bookmaker, type: '胜平负', target: labelMap[bestOutcome], amount: 60, odds: oddsMap[bestOutcome], expectedReturn: Math.round(60 * oddsMap[bestOutcome] * maxProb) }
+      ],
+      totalStake: 60,
+      expectedROI: Math.round((oddsMap[bestOutcome] * maxProb - 1) * 100),
+      winRateLabel: '置信度',
+      winRate: Math.round(maxProb * 100)
+    },
+    {
+      name: '方案B · 单注平衡',
+      risk: 40,
+      riskLevel: 'medium',
+      bets: [
+        { platform: odds.bookmaker, type: '胜平负', target: labelMap[bestOutcome], amount: 100, odds: oddsMap[bestOutcome], expectedReturn: Math.round(100 * oddsMap[bestOutcome] * maxProb) }
+      ],
+      totalStake: 100,
+      expectedROI: Math.round((oddsMap[bestOutcome] * maxProb - 1) * 100),
+      winRateLabel: 'Kelly比例',
+      winRate: Math.round((maxProb * oddsMap[bestOutcome] - 1) / (oddsMap[bestOutcome] - 1) * 100) || 10
+    },
+    {
+      name: '方案C · 串关激进',
+      risk: 60,
+      riskLevel: 'high',
+      bets: [
+        { platform: '串关2串1', type: '组合', target: labelMap[bestOutcome] + ' + 大小球', amount: 50, odds: oddsMap[bestOutcome] * 1.9, expectedReturn: Math.round(50 * oddsMap[bestOutcome] * 1.9 * 0.35) }
+      ],
+      totalStake: 50,
+      expectedROI: Math.round((oddsMap[bestOutcome] * 1.9 * 0.35 - 1) * 100),
+      winRateLabel: '胜率估算',
+      winRate: 35
+    }
+  ]
+})
+
+// Load data
+onMounted(async () => {
+  try {
+    const result = await cache.matchDetail(matchId.value)
+    if (result.success) {
+      matchData.value = result
+    } else {
+      error.value = '获取数据失败'
+    }
+  } catch (e: any) {
+    error.value = e.message || '网络错误'
+    console.error('Failed to load match detail:', e)
+  } finally {
+    loading.value = false
+  }
+})
+
+function formatTime(dateStr: string) {
+  if (!dateStr) return '--'
+  const date = new Date(dateStr)
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
+  const hours = date.getHours().toString().padStart(2, '0')
+  const mins = date.getMinutes().toString().padStart(2, '0')
+  return `${month}/${day} ${hours}:${mins}`
+}
 
 function copyPlan(plan: any) {
   let text = `【KickBet ${plan.name}】\n`

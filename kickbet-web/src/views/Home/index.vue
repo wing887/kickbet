@@ -43,15 +43,19 @@
         <div class="best-odds-box">
           <div class="best-odds-header">
             <span class="best-play-type">胜平负</span>
-            <span class="best-platform">Bet365</span>
+            <span class="best-platform">Poisson模型</span>
           </div>
           <div class="best-odds-content">
-            <span class="best-option">✓ {{ getBestBetLabel(dailyPick) }}</span>
-            <span class="best-odds-value">{{ getBestOdds(dailyPick) }}</span>
+            <span class="best-option">✓ {{ getPredictionLabel(dailyPick.prediction) }}</span>
+            <span class="best-odds-value">{{ getConfidencePercent(dailyPick.prediction) }}</span>
           </div>
           <div class="best-confidence">
-            <span class="conf-label">置信度</span>
-            <span class="conf-value">{{ dailyPick.prediction?.home_win_prob || '--' }}%</span>
+            <span class="conf-label">预期比分</span>
+            <span class="conf-value">{{ dailyPick.prediction?.most_likely_score || '--' }}</span>
+          </div>
+          <div v-if="dailyPick.prediction?.h2h_prediction" class="h2h-info">
+            <span class="conf-label">H2H交锋</span>
+            <span class="conf-value">{{ dailyPick.prediction.h2h_prediction.total_matches }}场</span>
           </div>
         </div>
         
@@ -123,29 +127,29 @@
         <div class="odds-preview-grid">
           <div class="odds-preview-item">
             <span class="odds-preview-type">胜平负</span>
-            <span :class="['odds-preview-best', match.hasValue ? 'has-value' : 'no-value']">
-              {{ match.bestBet || '—' }}
+            <span :class="['odds-preview-best', match.prediction ? 'has-value' : 'no-value']">
+              {{ getPredictionLabel(match.prediction) }}
             </span>
-            <span :class="['value-tag', match.hasValue ? 'positive' : 'neutral']">
-              {{ match.hasValue ? '+' + match.valuePct + '%' : '无价值' }}
-            </span>
-          </div>
-          <div class="odds-preview-item">
-            <span class="odds-preview-type">大小球</span>
-            <span :class="['odds-preview-best', match.totalsValue ? 'has-value' : 'no-value']">
-              {{ match.totalsBet || '—' }}
-            </span>
-            <span :class="['value-tag', match.totalsValue ? 'positive' : 'neutral']">
-              {{ match.totalsValue ? '+' + match.totalsPct + '%' : '无价值' }}
+            <span :class="['value-tag', calculateValue(match).hasValue ? 'positive' : 'neutral']">
+              {{ match.prediction ? getConfidencePercent(match.prediction) : '待分析' }}
             </span>
           </div>
           <div class="odds-preview-item">
-            <span class="odds-preview-type">让球</span>
-            <span :class="['odds-preview-best', match.handicapValue ? 'has-value' : 'no-value']">
-              {{ match.handicapBet || '—' }}
+            <span class="odds-preview-type">预期比分</span>
+            <span class="odds-preview-best has-value">
+              {{ match.prediction?.most_likely_score || '--' }}
             </span>
-            <span :class="['value-tag', match.handicapValue ? 'positive' : 'neutral']">
-              {{ match.handicapValue ? '+' + match.handicapPct + '%' : '无价值' }}
+            <span class="value-tag neutral">
+              {{ match.prediction ? `${match.prediction.expected_home_goals}-${match.prediction.expected_away_goals}` : '--' }}
+            </span>
+          </div>
+          <div class="odds-preview-item">
+            <span class="odds-preview-type">H2H</span>
+            <span :class="['odds-preview-best', match.prediction?.h2h_prediction ? 'has-value' : 'no-value']">
+              {{ match.prediction?.h2h_prediction?.total_matches || 0 }}场
+            </span>
+            <span :class="['value-tag', match.prediction?.h2h_prediction ? 'positive' : 'neutral']">
+              {{ match.prediction?.h2h_prediction ? '已融合' : '无数据' }}
             </span>
           </div>
         </div>
@@ -165,16 +169,16 @@
 <script setup lang="ts">
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
-import { matches, analysis, healthCheck } from '../../api'
-import type { Match, AnalysisResponse } from '../../api'
+import { cache } from '../../api'
+import type { CachedMatch, CachedPrediction } from '../../api'
 import BottomNav from '../../components/common/BottomNav.vue'
 
 const router = useRouter()
 
 const loading = ref(true)
 const apiOnline = ref(true)
-const dailyPick = ref<AnalysisResponse | null>(null)
-const matchList = ref<Match[]>([])
+const dailyPick = ref<CachedMatch | null>(null)
+const matchList = ref<CachedMatch[]>([])
 const currentLeague = ref('all')
 
 const leagueTabs = ref([
@@ -193,24 +197,23 @@ const filteredMatches = computed(() => {
 
 onMounted(async () => {
   try {
-    // 检查API状态
-    await healthCheck()
-    apiOnline.value = true
+    // 获取比赛列表 (带预测缓存)
+    const result = await cache.matches(72)  // 未来72小时比赛
+    apiOnline.value = result.success
     
-    // 获取比赛列表
-    const result = await matches.list(3)
-    matchList.value = result.matches
-    
-    // 更新联赛计数
-    updateLeagueCounts()
-    
-    // 获取第一场比赛的分析作为今日推荐
-    if (result.matches.length > 0) {
-      try {
-        dailyPick.value = await analysis.get(result.matches[0].match_id)
-      } catch (e) {
-        // 分析接口可能超时，使用模拟数据
-        dailyPick.value = createMockAnalysis(result.matches[0])
+    if (result.success && result.matches.length > 0) {
+      matchList.value = result.matches
+      
+      // 更新联赛计数
+      updateLeagueCounts()
+      
+      // 找到有预测的比赛作为今日推荐
+      const matchWithPrediction = result.matches.find(m => m.has_prediction)
+      if (matchWithPrediction) {
+        dailyPick.value = matchWithPrediction
+      } else {
+        // 如果没有预测，取第一场比赛
+        dailyPick.value = result.matches[0]
       }
     }
   } catch (e) {
@@ -236,28 +239,55 @@ function updateLeagueCounts() {
 function formatTime(dateStr: string) {
   if (!dateStr) return '--'
   const date = new Date(dateStr)
+  const month = (date.getMonth() + 1).toString().padStart(2, '0')
+  const day = date.getDate().toString().padStart(2, '0')
   const hours = date.getHours().toString().padStart(2, '0')
   const mins = date.getMinutes().toString().padStart(2, '0')
-  return `${hours}:${mins}`
+  return `${month}/${day} ${hours}:${mins}`
 }
 
 function getTeamAbbr(name: string) {
   if (!name) return '--'
-  // 取前两个字符作为缩写
   return name.substring(0, 2).toUpperCase()
 }
 
-function getBestBetLabel(data: AnalysisResponse) {
-  if (!data?.recommended_bets) return '分析中'
-  return data.recommended_bets.balanced?.type || '主胜'
+// 获取预测标签 (H/D/A)
+function getPredictionLabel(pred: CachedPrediction | undefined) {
+  if (!pred) return '待分析'
+  const labelMap: Record<string, string> = {
+    'H': '主胜',
+    'D': '平局',
+    'A': '客胜'
+  }
+  return labelMap[pred.prediction] || pred.prediction
 }
 
-function getBestOdds(data: AnalysisResponse) {
-  if (!data?.odds) return '--'
-  return data.odds.home || data.recommended_bets?.balanced?.odds || '--'
+// 获取置信度百分比
+function getConfidencePercent(pred: CachedPrediction | undefined) {
+  if (!pred) return '--'
+  // 使用综合概率（如果有）或基础概率
+  const prob = pred.combined_prob_home ?? pred.prob_home
+  const maxProb = Math.max(
+    pred.combined_prob_home ?? pred.prob_home,
+    pred.combined_prob_draw ?? pred.prob_draw,
+    pred.combined_prob_away ?? pred.prob_away
+  )
+  return `${Math.round(maxProb * 100)}%`
 }
 
-function viewMatchDetail(matchId: number) {
+// 获取推荐概率
+function getBestProb(pred: CachedPrediction | undefined) {
+  if (!pred) return 0
+  const probs = [
+    { type: 'H', prob: pred.combined_prob_home ?? pred.prob_home },
+    { type: 'D', prob: pred.combined_prob_draw ?? pred.prob_draw },
+    { type: 'A', prob: pred.combined_prob_away ?? pred.prob_away }
+  ]
+  const best = probs.reduce((a, b) => a.prob > b.prob ? a : b)
+  return best
+}
+
+function viewMatchDetail(matchId: string) {
   router.push(`/match/${matchId}`)
 }
 
@@ -270,38 +300,21 @@ function handleAuthClick() {
   }
 }
 
-function createMockAnalysis(match: Match): AnalysisResponse {
+// 计算价值百分比 (模型概率 - 市场隐含概率)
+function calculateValue(match: CachedMatch) {
+  if (!match.prediction) return { hasValue: false, valuePct: 0 }
+  
+  const pred = match.prediction
+  // 基础价值估算 (模型置信度 - 33.3%基准)
+  const maxProb = Math.max(
+    pred.combined_prob_home ?? pred.prob_home,
+    pred.combined_prob_draw ?? pred.prob_draw,
+    pred.combined_prob_away ?? pred.prob_away
+  )
+  const value = maxProb - 0.333
   return {
-    match_id: match.match_id,
-    home_team: match.home_team,
-    away_team: match.away_team,
-    league: match.league,
-    league_name: match.league_name,
-    prediction: {
-      home_win_prob: 45,
-      draw_prob: 25,
-      away_win_prob: 30,
-      predicted_home_goals: 1.5,
-      predicted_away_goals: 1.2
-    },
-    poisson_simulation: {
-      iterations: 10000,
-      home_win_pct: 45,
-      draw_pct: 25,
-      away_win_pct: 30,
-      most_likely_scores: [{ score: '1-1', probability: 12 }]
-    },
-    odds: { home: 1.81, draw: 3.50, away: 4.20 },
-    kelly_criterion: {
-      home: { edge: 3, kelly: 0.02, half_kelly: 0.01, value: true },
-      draw: { edge: -2, kelly: 0, half_kelly: 0, value: false },
-      away: { edge: -5, kelly: 0, half_kelly: 0, value: false }
-    },
-    recommended_bets: {
-      conservative: { type: '双选防守', odds: 1.50, stake_pct: 2, reason: '降低风险' },
-      balanced: { type: '主胜', odds: 1.81, stake_pct: 3, reason: '价值投注' },
-      aggressive: { type: '大2.5球', odds: 1.90, stake_pct: 5, reason: '高收益' }
-    }
+    hasValue: value > 0.05,  // 价值阈值5%
+    valuePct: Math.round(value * 100)
   }
 }
 </script>
